@@ -163,7 +163,7 @@ class WindcaveDropInPaymentHandler extends AbstractPaymentHandler
                 );
             }
 
-            // Store session and transaction data
+            // Store session and transaction data including card details
             $customFields = [
                 'windcaveSessionId' => $sessionId,
                 'windcaveDropInTestMode' => $testMode,
@@ -177,6 +177,15 @@ class WindcaveDropInPaymentHandler extends AbstractPaymentHandler
             }
             if ($result->getCurrency()) {
                 $customFields['windcaveCurrency'] = $result->getCurrency();
+            }
+            if ($result->getCardType()) {
+                $customFields['windcaveCardType'] = $result->getCardType();
+            }
+            if ($result->getCardLast4()) {
+                $customFields['windcaveCardLast4'] = $result->getCardLast4();
+            }
+            if ($result->getCardExpiry()) {
+                $customFields['windcaveCardExpiry'] = $result->getCardExpiry();
             }
 
             $this->orderTransactionRepository->update([
@@ -285,7 +294,7 @@ class WindcaveDropInPaymentHandler extends AbstractPaymentHandler
             );
         }
 
-        // Store transaction data for refunds
+        // Store transaction data for refunds and card details for display
         $transactionData = [
             'id' => $orderTransactionId,
             'customFields' => [],
@@ -299,6 +308,15 @@ class WindcaveDropInPaymentHandler extends AbstractPaymentHandler
         }
         if ($result->getCurrency()) {
             $transactionData['customFields']['windcaveCurrency'] = $result->getCurrency();
+        }
+        if ($result->getCardType()) {
+            $transactionData['customFields']['windcaveCardType'] = $result->getCardType();
+        }
+        if ($result->getCardLast4()) {
+            $transactionData['customFields']['windcaveCardLast4'] = $result->getCardLast4();
+        }
+        if ($result->getCardExpiry()) {
+            $transactionData['customFields']['windcaveCardExpiry'] = $result->getCardExpiry();
         }
 
         if (!empty($transactionData['customFields'])) {

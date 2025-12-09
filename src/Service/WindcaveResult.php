@@ -12,7 +12,10 @@ class WindcaveResult
         private readonly ?string $cardId = null,
         private readonly ?string $transactionId = null,
         private readonly ?string $amount = null,
-        private readonly ?string $currency = null
+        private readonly ?string $currency = null,
+        private readonly ?string $cardType = null,
+        private readonly ?string $cardLast4 = null,
+        private readonly ?string $cardExpiry = null
     ) {
     }
 
@@ -44,5 +47,20 @@ class WindcaveResult
     public function getCurrency(): ?string
     {
         return $this->currency;
+    }
+
+    public function getCardType(): ?string
+    {
+        return $this->cardType;
+    }
+
+    public function getCardLast4(): ?string
+    {
+        return $this->cardLast4;
+    }
+
+    public function getCardExpiry(): ?string
+    {
+        return $this->cardExpiry;
     }
 }

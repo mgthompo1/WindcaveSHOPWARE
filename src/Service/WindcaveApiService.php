@@ -126,11 +126,17 @@ class WindcaveApiService
         }
 
         $data = $response->toArray(false);
+
+        $this->logger->debug('Windcave session result', ['sessionId' => $sessionId, 'data' => $data]);
+
         $state = \strtolower((string) ($data['state'] ?? ''));
         $cardId = $this->extractCardId($data);
         $transactionId = $this->extractTransactionId($data);
         $amount = $this->extractAmount($data);
         $currency = $this->extractCurrency($data);
+        $cardType = $this->extractCardType($data);
+        $cardLast4 = $this->extractCardLast4($data);
+        $cardExpiry = $this->extractCardExpiry($data);
 
         return new WindcaveResult(
             success: \in_array($state, ['approved', 'complete', 'completed'], true),
@@ -138,7 +144,10 @@ class WindcaveApiService
             cardId: $cardId,
             transactionId: $transactionId,
             amount: $amount,
-            currency: $currency
+            currency: $currency,
+            cardType: $cardType,
+            cardLast4: $cardLast4,
+            cardExpiry: $cardExpiry
         );
     }
 
@@ -197,6 +206,70 @@ class WindcaveApiService
 
         if (isset($data['currency'])) {
             return (string) $data['currency'];
+        }
+
+        return null;
+    }
+
+    private function extractCardType(array $data): ?string
+    {
+        // Windcave returns card type/scheme in different locations
+        if (isset($data['transactions'][0]['card']['type'])) {
+            return (string) $data['transactions'][0]['card']['type'];
+        }
+
+        if (isset($data['transactions'][0]['card']['cardHolderName'])) {
+            // Sometimes it's under cardScheme instead
+        }
+
+        if (isset($data['transactions'][0]['cardScheme'])) {
+            return (string) $data['transactions'][0]['cardScheme'];
+        }
+
+        if (isset($data['card']['type'])) {
+            return (string) $data['card']['type'];
+        }
+
+        return null;
+    }
+
+    private function extractCardLast4(array $data): ?string
+    {
+        // Windcave returns masked card number like "411111........1111"
+        if (isset($data['transactions'][0]['card']['cardNumber'])) {
+            $masked = (string) $data['transactions'][0]['card']['cardNumber'];
+            // Extract last 4 digits
+            $cleaned = preg_replace('/[^0-9]/', '', $masked);
+            if ($cleaned && strlen($cleaned) >= 4) {
+                return substr($cleaned, -4);
+            }
+            return $masked;
+        }
+
+        if (isset($data['card']['cardNumber'])) {
+            $masked = (string) $data['card']['cardNumber'];
+            $cleaned = preg_replace('/[^0-9]/', '', $masked);
+            if ($cleaned && strlen($cleaned) >= 4) {
+                return substr($cleaned, -4);
+            }
+            return $masked;
+        }
+
+        return null;
+    }
+
+    private function extractCardExpiry(array $data): ?string
+    {
+        if (isset($data['transactions'][0]['card']['dateExpiryMonth']) && isset($data['transactions'][0]['card']['dateExpiryYear'])) {
+            $month = str_pad((string) $data['transactions'][0]['card']['dateExpiryMonth'], 2, '0', STR_PAD_LEFT);
+            $year = substr((string) $data['transactions'][0]['card']['dateExpiryYear'], -2);
+            return $month . '/' . $year;
+        }
+
+        if (isset($data['card']['dateExpiryMonth']) && isset($data['card']['dateExpiryYear'])) {
+            $month = str_pad((string) $data['card']['dateExpiryMonth'], 2, '0', STR_PAD_LEFT);
+            $year = substr((string) $data['card']['dateExpiryYear'], -2);
+            return $month . '/' . $year;
         }
 
         return null;

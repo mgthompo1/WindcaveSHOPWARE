@@ -144,6 +144,34 @@ Component.register('windcave-payment-details', {
             const data = this.windcaveData;
             const details = [];
 
+            // Card type (Visa, Mastercard, etc.)
+            if (data.windcaveCardType) {
+                details.push({
+                    label: 'Card Type',
+                    value: data.windcaveCardType,
+                    copyable: false
+                });
+            }
+
+            // Last 4 digits
+            if (data.windcaveCardLast4) {
+                details.push({
+                    label: 'Card Number',
+                    value: `•••• ${data.windcaveCardLast4}`,
+                    copyable: false
+                });
+            }
+
+            // Expiry date
+            if (data.windcaveCardExpiry) {
+                details.push({
+                    label: 'Card Expiry',
+                    value: data.windcaveCardExpiry,
+                    copyable: false
+                });
+            }
+
+            // Card token (for recurring payments)
             if (data.windcaveCardId) {
                 details.push({
                     label: 'Card Token',
@@ -153,30 +181,15 @@ Component.register('windcave-payment-details', {
                 });
             }
 
-            if (data.windcaveCardExpiry) {
-                details.push({
-                    label: 'Card Expiry',
-                    value: data.windcaveCardExpiry,
-                    copyable: false
-                });
-            }
-
-            if (data.windcaveCardScheme) {
-                details.push({
-                    label: 'Card Type',
-                    value: data.windcaveCardScheme,
-                    copyable: false
-                });
-            }
-
             return details;
         },
 
         /**
-         * Check if there's card token data
+         * Check if there's card data to display
          */
         hasCardTokenData() {
-            return this.cardTokenDetails.length > 0;
+            const data = this.windcaveData;
+            return !!(data.windcaveCardType || data.windcaveCardLast4 || data.windcaveCardExpiry || data.windcaveCardId);
         },
 
         /**
