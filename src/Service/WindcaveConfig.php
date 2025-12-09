@@ -49,6 +49,11 @@ class WindcaveConfig
         return (string) ($this->systemConfig->get(self::CONFIG_PREFIX . 'storedCardIndicatorRecurring', $salesChannelId) ?? 'credentialonfile');
     }
 
+    public function isZipCodeRequired(?string $salesChannelId): bool
+    {
+        return (bool) ($this->systemConfig->get(self::CONFIG_PREFIX . 'requireZipCode', $salesChannelId) ?? false);
+    }
+
     public function isTestMode(?string $salesChannelId): bool
     {
         $value = $this->systemConfig->get(self::CONFIG_PREFIX . 'testMode', $salesChannelId);

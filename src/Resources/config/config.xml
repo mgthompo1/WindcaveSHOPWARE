@@ -61,6 +61,12 @@
             <label>Stored card indicator (recurring)</label>
             <defaultValue>credentialonfile</defaultValue>
         </input-field>
+        <input-field type="bool">
+            <name>requireZipCode</name>
+            <label>Require ZIP/Postal Code</label>
+            <helpText>Add a ZIP/postal code field after CVC in Hosted Fields and Drop-In modes</helpText>
+            <defaultValue>false</defaultValue>
+        </input-field>
     </card>
 
     <card>

@@ -165,6 +165,7 @@ class CheckoutConfirmPageSubscriber implements EventSubscriberInterface
             'styles' => $this->config->getDropInStyles($salesChannelId),
             'customCss' => $this->config->getCustomCss($salesChannelId),
             'paymentMode' => $this->config->getPaymentMode($salesChannelId),
+            'requireZipCode' => $this->config->isZipCodeRequired($salesChannelId),
         ];
     }
 
