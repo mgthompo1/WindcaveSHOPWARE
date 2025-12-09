@@ -1,6 +1,6 @@
 # Windcave Shopware Plugin
 
-Windcave hosted payment page (PxPay) integration for Shopware 6 using the asynchronous payment handler flow.
+Windcave hosted payment page HPP REST + Drop In integration for Shopware 6 using the asynchronous payment handler flow.
 
 ## Features
 - Registers `Windcave Hosted Payment` (REST HPP redirect) and `Windcave Drop-in` (REST drop-in, inline) methods
