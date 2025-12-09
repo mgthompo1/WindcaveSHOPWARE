@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Windcave\Service;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\HttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Windcave\Service\Struct\WindcaveDropInSession;
 use Windcave\Service\WindcaveSessionRequestPayload;
@@ -36,7 +35,7 @@ class WindcaveApiService
 
         $status = $response->getStatusCode();
         if ($status !== 200 && $status !== 202) {
-            throw new HttpException($status, 'Unexpected status from Windcave sessions: ' . $status);
+            throw new \RuntimeException('Unexpected status from Windcave sessions: ' . $status);
         }
 
         $data = $response->toArray(false);
@@ -67,15 +66,29 @@ class WindcaveApiService
     public function createDropInSession(WindcaveSessionRequestPayload $payload): WindcaveDropInSession
     {
         $endpoint = $payload->testMode ? self::TEST_SESSION_ENDPOINT : self::LIVE_SESSION_ENDPOINT;
+        $requestPayload = $payload->asArray();
+
+        $this->logger->info('Windcave createDropInSession request', [
+            'endpoint' => $endpoint,
+            'payload' => $requestPayload,
+        ]);
 
         $response = $this->httpClient->request('POST', $endpoint, [
-            'json' => $payload->asArray(),
+            'json' => $requestPayload,
             'auth_basic' => [$payload->username, $payload->apiKey],
         ]);
 
         $status = $response->getStatusCode();
         if ($status !== 200 && $status !== 202) {
-            throw new HttpException($status, 'Unexpected status from Windcave sessions: ' . $status);
+            $responseBody = $response->getContent(false);
+            $this->logger->error('Windcave createDropInSession failed', [
+                'status' => $status,
+                'endpoint' => $endpoint,
+                'testMode' => $payload->testMode,
+                'response' => $responseBody,
+                'payload' => $requestPayload,
+            ]);
+            throw new \RuntimeException('Unexpected status from Windcave sessions: ' . $status . ' - ' . $responseBody);
         }
 
         $data = $response->toArray(false);
@@ -109,7 +122,7 @@ class WindcaveApiService
         $status = $response->getStatusCode();
 
         if ($status !== 200) {
-            throw new HttpException($status, 'Failed to load Windcave session result');
+            throw new \RuntimeException('Failed to load Windcave session result: HTTP ' . $status);
         }
 
         $data = $response->toArray(false);

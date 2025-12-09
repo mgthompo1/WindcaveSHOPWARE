@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Windcave\Service;
 
-use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
+use Shopware\Core\Checkout\Order\OrderEntity;
+use Shopware\Core\Framework\Context;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Windcave\Service\WindcaveSessionRequestPayload;
-use Windcave\Service\WindcaveTokenService;
 
 class WindcavePayloadFactory
 {
@@ -19,45 +18,41 @@ class WindcavePayloadFactory
     ) {
     }
 
-    public function fromTransaction(
-        AsyncPaymentTransactionStruct $transaction,
-        SalesChannelContext $context,
+    /**
+     * Create payload from Order and OrderTransaction entities (Shopware 6.6+)
+     */
+    public function fromOrderAndTransaction(
+        OrderEntity $order,
+        OrderTransactionEntity $orderTransaction,
+        Context $context,
         string $returnUrl
     ): WindcaveSessionRequestPayload {
-        $order = $transaction->getOrder();
-        $currency = $order->getCurrency()?->getIsoCode() ?? $context->getCurrency()->getIsoCode();
-        $total = $transaction->getOrderTransaction()->getAmount()->getTotalPrice();
-        $salesChannelId = $context->getSalesChannelId();
+        $currency = $order->getCurrency()?->getIsoCode() ?? 'NZD';
+        $total = $orderTransaction->getAmount()->getTotalPrice();
+        $salesChannelId = $order->getSalesChannelId();
         $language = $order->getLanguage()?->getTranslationCode()?->getCode() ?? 'en';
         $orderCustomer = $order->getOrderCustomer();
         $billing = $order->getBillingAddress();
         $shipping = $order->getDeliveries()?->first()?->getShippingOrderAddress();
         $customerEmail = $orderCustomer?->getEmail();
 
+        // Note: We don't include returnUrl in callback URLs to keep them short
+        // The returnUrl is stored in order transaction custom fields and retrieved during callback handling
         $approvedUrl = $this->router->generate(
             'frontend.windcave.success',
-            [
-                'orderId' => $order->getId(),
-                'returnUrl' => $returnUrl,
-            ],
+            ['orderId' => $order->getId()],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
         $declinedUrl = $this->router->generate(
             'frontend.windcave.fail',
-            [
-                'orderId' => $order->getId(),
-                'returnUrl' => $returnUrl,
-            ],
+            ['orderId' => $order->getId()],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
         $cancelledUrl = $this->router->generate(
             'frontend.windcave.fail',
-            [
-                'orderId' => $order->getId(),
-                'returnUrl' => $returnUrl,
-            ],
+            ['orderId' => $order->getId()],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
@@ -72,8 +67,8 @@ class WindcavePayloadFactory
         $restKey = $this->config->getRestApiKey($salesChannelId);
         $testMode = $this->config->isTestMode($salesChannelId);
         $storeCard = $this->config->isStoreCardEnabled($salesChannelId);
-        $customerId = $context->getCustomer()?->getId();
-        $savedToken = $this->getStoredToken($customerId, $context->getContext());
+        $customerId = $orderCustomer?->getCustomerId();
+        $savedToken = $this->getStoredToken($customerId, $context);
         $storedCardIndicator = $savedToken
             ? $this->config->getStoredCardIndicatorRecurring($salesChannelId)
             : ($storeCard ? $this->config->getStoredCardIndicatorInitial($salesChannelId) : null);
@@ -102,24 +97,19 @@ class WindcavePayloadFactory
         );
     }
 
-    public function getConfig(): WindcaveConfig
-    {
-        return $this->config;
-    }
-
     /**
      * Create a minimal payload for drop-in finalization (session query).
      * This is used when we need to query the session result without all the address data.
      */
-    public function dropInPayload(
-        AsyncPaymentTransactionStruct $transaction,
-        SalesChannelContext $context,
+    public function dropInPayloadFromOrderAndTransaction(
+        OrderEntity $order,
+        OrderTransactionEntity $orderTransaction,
+        Context $context,
         string $returnUrl
     ): WindcaveSessionRequestPayload {
-        $order = $transaction->getOrder();
-        $currency = $order->getCurrency()?->getIsoCode() ?? $context->getCurrency()->getIsoCode();
-        $total = $transaction->getOrderTransaction()->getAmount()->getTotalPrice();
-        $salesChannelId = $context->getSalesChannelId();
+        $currency = $order->getCurrency()?->getIsoCode() ?? 'NZD';
+        $total = $orderTransaction->getAmount()->getTotalPrice();
+        $salesChannelId = $order->getSalesChannelId();
 
         $restUser = $this->config->getRestUsername($salesChannelId);
         $restKey = $this->config->getRestApiKey($salesChannelId);
@@ -144,6 +134,11 @@ class WindcavePayloadFactory
             notificationUrl: $notificationUrl,
             testMode: $testMode
         );
+    }
+
+    public function getConfig(): WindcaveConfig
+    {
+        return $this->config;
     }
 
     private function mapAddress(?\Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity $address): ?array
@@ -182,7 +177,7 @@ class WindcavePayloadFactory
         ];
     }
 
-    private function getStoredToken(?string $customerId, \Shopware\Core\Framework\Context $context): ?string
+    private function getStoredToken(?string $customerId, Context $context): ?string
     {
         if (!$customerId) {
             return null;

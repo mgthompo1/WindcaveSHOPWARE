@@ -1,0 +1,268 @@
+{% sw_extends '@Storefront/storefront/page/checkout/confirm/index.html.twig' %}
+
+{# Inject Windcave Drop-In scripts in the head #}
+{% block base_head %}
+    {{ parent() }}
+
+    {% if page.extensions.windcaveDropIn and page.extensions.windcaveDropIn.links is not empty %}
+        {% set windcaveData = page.extensions.windcaveDropIn %}
+
+        {# Load Windcave Drop-In JavaScript files - order matters! #}
+        <script src="{{ windcaveData.scriptBase }}/js/lib/drop-in-v1.js"></script>
+        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-dropin-v1.js"></script>
+        <script src="{{ windcaveData.scriptBase }}/js/lib/hosted-fields-v1.js"></script>
+        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-hostedfields-v1.js"></script>
+        {# Apple Pay and Google Pay scripts - always load them, SDK checks availability #}
+        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-applepay-v1.js"></script>
+        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-googlepay-v1.js"></script>
+
+        {# Custom CSS from admin configuration #}
+        {% if windcaveData.customCss %}
+        <style>
+            {{ windcaveData.customCss|raw }}
+        </style>
+        {% endif %}
+
+        {# Styling for Drop-In container #}
+        <style>
+            .windcave-dropin-checkout {
+                margin-top: 1rem;
+                min-height: 200px;
+            }
+            .windcave-dropin-checkout .text-muted {
+                padding: 2rem;
+                text-align: center;
+            }
+            /* Hide the payment method description paragraph text for ALL payment methods on this page */
+            .payment-method-description p.mb-0 {
+                display: none !important;
+            }
+            /* Hide the default submit button - user pays via Drop-In Pay button */
+            .checkout-aside-action {
+                display: none !important;
+            }
+        </style>
+    {% endif %}
+{% endblock %}
+
+{# Extend the payment form block to add Drop-In INSIDE the payment card #}
+{% block page_checkout_change_payment_form %}
+    {{ parent() }}
+
+    {% if page.extensions.windcaveDropIn and page.extensions.windcaveDropIn.links is not empty %}
+        {% set windcaveData = page.extensions.windcaveDropIn %}
+
+        <style>
+            .windcave-dropin-checkout {
+                margin-top: 1rem;
+                min-height: 200px;
+            }
+            /* Hide only the description paragraph, not the payment method name */
+            .payment-method-description p.mb-0 {
+                display: none !important;
+            }
+        </style>
+
+        {# Drop-In container - inside the payment card, after payment method radios #}
+        <div id="windcave-dropin-container" class="windcave-dropin-checkout">
+            <p class="text-muted">Loading secure payment form...</p>
+        </div>
+
+        {# Hidden fields to store payment result for form submission #}
+        <input type="hidden" id="windcave-payment-completed" name="windcavePaymentCompleted" value="0" form="confirmOrderForm">
+        <input type="hidden" id="windcave-session-id" name="windcaveSessionId" value="{{ windcaveData.sessionId }}" form="confirmOrderForm">
+
+        {# Initialize Drop-In JavaScript #}
+        <script>
+            (function() {
+                var windcaveConfig = {
+                    sessionId: "{{ windcaveData.sessionId }}",
+                    links: {{ windcaveData.links|json_encode|raw }},
+                    totalValue: "{{ windcaveData.totalValue }}",
+                    currency: "{{ windcaveData.currency }}",
+                    country: "{{ windcaveData.country }}",
+                    merchantName: "{{ windcaveData.merchantName }}",
+                    isTest: {{ windcaveData.isTest ? 'true' : 'false' }},
+                    appleMerchantId: "{{ windcaveData.appleMerchantId|default('') }}",
+                    googleMerchantId: "{{ windcaveData.googleMerchantId|default('') }}",
+                    darkModeConfig: "{{ windcaveData.darkModeConfig|default('light') }}",
+                    hideSelectPaymentMethodTitle: {{ windcaveData.hideSelectPaymentMethodTitle ? 'true' : 'false' }},
+                    styles: {{ windcaveData.styles|json_encode|raw }}
+                };
+
+                console.log('=== Windcave Inline Drop-In Config ===');
+                console.log('Session ID:', windcaveConfig.sessionId);
+                console.log('Links count:', windcaveConfig.links.length);
+
+                var paymentCompleted = false;
+                var windcaveDropIn = null;
+
+                function initDropIn() {
+                    console.log('Initializing Windcave Drop-In on checkout page...');
+
+                    var options = {
+                        container: 'windcave-dropin-container',
+                        links: windcaveConfig.links,
+                        totalValue: windcaveConfig.totalValue,
+                        darkModeConfig: windcaveConfig.darkModeConfig,
+                        hideSelectPaymentMethodTitle: true,
+                        card: {
+                            supportedCards: ['visa', 'mastercard', 'amex'],
+                            sideIcons: ['visa', 'mastercard', 'amex']
+                        },
+                        onSuccess: function(status) {
+                            console.log('Windcave payment success, status:', status);
+
+                            if (status === '3DSecure') {
+                                console.log('3DS in progress, waiting...');
+                                return;
+                            }
+
+                            paymentCompleted = true;
+                            document.getElementById('windcave-payment-completed').value = '1';
+
+                            console.log('Payment completed, submitting order form...');
+
+                            var orderForm = document.getElementById('confirmOrderForm');
+                            if (orderForm) {
+                                orderForm.submit();
+                            }
+                        },
+                        onError: function(stage, error) {
+                            console.error('Windcave payment error:', stage, error);
+
+                            var container = document.getElementById('windcave-dropin-container');
+                            if (container) {
+                                var errorDiv = document.createElement('div');
+                                errorDiv.className = 'alert alert-danger mt-3';
+                                errorDiv.innerHTML = '<strong>Payment Error:</strong> ' +
+                                    (error && error.message ? error.message : 'An error occurred during payment. Please try again.');
+                                container.appendChild(errorDiv);
+                            }
+                        },
+                        onPaymentStart: function(paymentMethod, next, cancel) {
+                            console.log('Payment starting with method:', paymentMethod);
+
+                            var tosCheckbox = document.getElementById('tos');
+                            if (tosCheckbox && !tosCheckbox.checked) {
+                                alert('Please accept the terms and conditions before proceeding with payment.');
+                                cancel();
+                                return;
+                            }
+
+                            next();
+                        }
+                    };
+
+                    if (windcaveConfig.appleMerchantId || windcaveConfig.googleMerchantId) {
+                        options.mobilePayments = {
+                            merchantName: windcaveConfig.merchantName,
+                            countryCode: windcaveConfig.country,
+                            currencyCode: windcaveConfig.currency,
+                            supportedNetworks: ['visa', 'mastercard', 'amex'],
+                            isTest: windcaveConfig.isTest
+                        };
+
+                        if (windcaveConfig.appleMerchantId) {
+                            options.mobilePayments.applePay = {
+                                merchantId: windcaveConfig.appleMerchantId
+                            };
+                        }
+
+                        if (windcaveConfig.googleMerchantId) {
+                            options.mobilePayments.googlePay = {
+                                merchantId: windcaveConfig.googleMerchantId,
+                                googleMerchantId: windcaveConfig.isTest ? '00000000' : windcaveConfig.googleMerchantId
+                            };
+                        }
+                    }
+
+                    if (windcaveConfig.styles && Object.keys(windcaveConfig.styles).length > 0) {
+                        options.styles = windcaveConfig.styles;
+                    }
+
+                    try {
+                        windcaveDropIn = WindcavePayments.DropIn.create(
+                            options,
+                            function onCreateSuccess() {
+                                console.log('Windcave Drop-In created successfully on checkout page!');
+                                // Hide the default submit button - payment is done via Drop-In Pay button
+                                var submitBtn = document.getElementById('confirmFormSubmit');
+                                if (submitBtn) {
+                                    submitBtn.style.display = 'none';
+                                    console.log('Windcave: Hidden submit button');
+                                }
+                            },
+                            function onCreateError(err) {
+                                console.error('Windcave Drop-In creation failed:', err);
+                                // Show fallback message but keep submit button visible for redirect flow
+                                document.body.classList.remove('windcave-dropin-active');
+                                document.getElementById('windcave-dropin-container').innerHTML =
+                                    '<div class="alert alert-warning">' +
+                                    '<strong>Payment form unavailable.</strong> ' +
+                                    'You can still proceed with checkout - you will be redirected to complete payment.' +
+                                    '</div>';
+                            }
+                        );
+
+                        window.windcaveDropIn = windcaveDropIn;
+                    } catch (e) {
+                        console.error('Exception creating Drop-In:', e);
+                    }
+                }
+
+                function waitForWindcave() {
+                    var maxAttempts = 100;
+                    var attempts = 0;
+
+                    function check() {
+                        attempts++;
+                        if (window.WindcavePayments && window.WindcavePayments.DropIn) {
+                            console.log('WindcavePayments SDK loaded (attempt ' + attempts + ')');
+                            initDropIn();
+                        } else if (attempts < maxAttempts) {
+                            setTimeout(check, 100);
+                        } else {
+                            console.error('WindcavePayments SDK failed to load');
+                            document.getElementById('windcave-dropin-container').innerHTML =
+                                '<div class="alert alert-warning">' +
+                                '<strong>Payment form unavailable.</strong> ' +
+                                'You can still proceed with checkout.' +
+                                '</div>';
+                        }
+                    }
+                    check();
+                }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    var orderForm = document.getElementById('confirmOrderForm');
+                    if (orderForm) {
+                        orderForm.addEventListener('submit', function(e) {
+                            var paymentCompletedField = document.getElementById('windcave-payment-completed');
+
+                            if (paymentCompletedField && paymentCompletedField.value === '1') {
+                                console.log('Payment completed, allowing order submission');
+                                return true;
+                            }
+
+                            if (windcaveDropIn && !paymentCompleted) {
+                                e.preventDefault();
+                                console.log('Payment not completed - please complete payment in the form above');
+                                alert('Please complete your payment using the payment form above before placing your order.');
+                                return false;
+                            }
+
+                            return true;
+                        });
+                    }
+                });
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', waitForWindcave);
+                } else {
+                    waitForWindcave();
+                }
+            })();
+        </script>
+    {% endif %}
+{% endblock %}

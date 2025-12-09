@@ -1,21 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/System/SystemConfig/Schema/config-1.0.xsd">
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/System/SystemConfig/Schema/config.xsd">
     <card>
         <title>Windcave REST API</title>
-        <input-field type="text" name="WindcavePayment.config.restUsername" label="REST API Username" required="true"/>
-        <input-field type="text" name="WindcavePayment.config.restApiKey" label="REST API Key" required="true"/>
-        <input-field type="bool" name="WindcavePayment.config.testMode" label="Test mode" defaultValue="true"/>
-        <input-field type="text" name="WindcavePayment.config.appleMerchantId" label="Apple Pay merchantId (Windcave)" required="false"/>
-        <input-field type="text" name="WindcavePayment.config.googleMerchantId" label="Google Pay merchantId (Windcave/Google)" required="false"/>
-        <input-field type="bool" name="WindcavePayment.config.storeCard" label="Store card token for rebilling" defaultValue="false"/>
-        <input-field type="text" name="WindcavePayment.config.storedCardIndicatorInitial" label="Stored card indicator (initial)" defaultValue="credentialonfileinitial"/>
-        <input-field type="text" name="WindcavePayment.config.storedCardIndicatorRecurring" label="Stored card indicator (recurring)" defaultValue="credentialonfile"/>
+        <input-field type="text">
+            <name>restUsername</name>
+            <label>REST API Username</label>
+            <required>true</required>
+        </input-field>
+        <input-field type="password">
+            <name>restApiKey</name>
+            <label>REST API Key</label>
+            <required>true</required>
+        </input-field>
+        <input-field type="bool">
+            <name>testMode</name>
+            <label>Test mode</label>
+            <defaultValue>true</defaultValue>
+        </input-field>
+        <input-field type="text">
+            <name>appleMerchantId</name>
+            <label>Apple Pay merchantId (Windcave)</label>
+        </input-field>
+        <input-field type="text">
+            <name>googleMerchantId</name>
+            <label>Google Pay merchantId (Windcave/Google)</label>
+        </input-field>
+        <input-field type="bool">
+            <name>storeCard</name>
+            <label>Store card token for rebilling</label>
+            <defaultValue>false</defaultValue>
+        </input-field>
+        <input-field type="text">
+            <name>storedCardIndicatorInitial</name>
+            <label>Stored card indicator (initial)</label>
+            <defaultValue>credentialonfileinitial</defaultValue>
+        </input-field>
+        <input-field type="text">
+            <name>storedCardIndicatorRecurring</name>
+            <label>Stored card indicator (recurring)</label>
+            <defaultValue>credentialonfile</defaultValue>
+        </input-field>
     </card>
 
     <card>
         <title>Drop-in Appearance</title>
-        <input-field type="single-select" name="WindcavePayment.config.darkModeConfig">
+        <input-field type="single-select">
+            <name>darkModeConfig</name>
             <label>Theme Mode</label>
             <helpText>Controls the color theme of the drop-in payment form</helpText>
             <defaultValue>light</defaultValue>
@@ -34,26 +65,33 @@
                 </option>
             </options>
         </input-field>
-        <input-field type="bool" name="WindcavePayment.config.hideSelectPaymentMethodTitle" label="Hide 'Select Payment Method' title" defaultValue="false">
+        <input-field type="bool">
+            <name>hideSelectPaymentMethodTitle</name>
+            <label>Hide 'Select Payment Method' title</label>
             <helpText>Hide the header text above payment options</helpText>
+            <defaultValue>false</defaultValue>
         </input-field>
     </card>
 
     <card>
         <title>Drop-in Button Styling</title>
-        <input-field type="colorpicker" name="WindcavePayment.config.submitButtonBgColor">
+        <input-field type="colorpicker">
+            <name>submitButtonBgColor</name>
             <label>Submit Button Background Color</label>
             <helpText>Background color for the Submit/Pay button</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.submitButtonTextColor">
+        <input-field type="colorpicker">
+            <name>submitButtonTextColor</name>
             <label>Submit Button Text Color</label>
             <helpText>Text color for the Submit/Pay button</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.submitButtonHoverBgColor">
+        <input-field type="colorpicker">
+            <name>submitButtonHoverBgColor</name>
             <label>Submit Button Hover Background</label>
             <helpText>Background color when hovering over Submit button</helpText>
         </input-field>
-        <input-field type="text" name="WindcavePayment.config.submitButtonBorderRadius">
+        <input-field type="text">
+            <name>submitButtonBorderRadius</name>
             <label>Submit Button Border Radius</label>
             <helpText>e.g., 4px, 8px, 0</helpText>
             <placeholder>4px</placeholder>
@@ -62,20 +100,24 @@
 
     <card>
         <title>Drop-in Container Styling</title>
-        <input-field type="colorpicker" name="WindcavePayment.config.containerBgColor">
+        <input-field type="colorpicker">
+            <name>containerBgColor</name>
             <label>Container Background Color</label>
             <helpText>Background color for the main drop-in container</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.containerBorderColor">
+        <input-field type="colorpicker">
+            <name>containerBorderColor</name>
             <label>Container Border Color</label>
             <helpText>Border color for the drop-in container</helpText>
         </input-field>
-        <input-field type="text" name="WindcavePayment.config.containerBorderRadius">
+        <input-field type="text">
+            <name>containerBorderRadius</name>
             <label>Container Border Radius</label>
             <helpText>e.g., 8px, 12px, 0</helpText>
             <placeholder>8px</placeholder>
         </input-field>
-        <input-field type="text" name="WindcavePayment.config.containerPadding">
+        <input-field type="text">
+            <name>containerPadding</name>
             <label>Container Padding</label>
             <helpText>e.g., 16px, 20px 24px</helpText>
             <placeholder>16px</placeholder>
@@ -84,27 +126,33 @@
 
     <card>
         <title>Drop-in Input Field Styling</title>
-        <input-field type="colorpicker" name="WindcavePayment.config.inputBgColor">
+        <input-field type="colorpicker">
+            <name>inputBgColor</name>
             <label>Input Background Color</label>
             <helpText>Background color for card input fields</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.inputBorderColor">
+        <input-field type="colorpicker">
+            <name>inputBorderColor</name>
             <label>Input Border Color</label>
             <helpText>Border color for card input fields</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.inputFocusBorderColor">
+        <input-field type="colorpicker">
+            <name>inputFocusBorderColor</name>
             <label>Input Focus Border Color</label>
             <helpText>Border color when input is focused</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.inputValidBorderColor">
+        <input-field type="colorpicker">
+            <name>inputValidBorderColor</name>
             <label>Input Valid Border Color</label>
             <helpText>Border color when input is valid (e.g., green)</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.inputInvalidBorderColor">
+        <input-field type="colorpicker">
+            <name>inputInvalidBorderColor</name>
             <label>Input Invalid Border Color</label>
             <helpText>Border color when input is invalid (e.g., red)</helpText>
         </input-field>
-        <input-field type="text" name="WindcavePayment.config.inputBorderRadius">
+        <input-field type="text">
+            <name>inputBorderRadius</name>
             <label>Input Border Radius</label>
             <helpText>e.g., 4px, 6px, 0</helpText>
             <placeholder>4px</placeholder>
@@ -113,15 +161,18 @@
 
     <card>
         <title>Drop-in Text Styling</title>
-        <input-field type="colorpicker" name="WindcavePayment.config.primaryTextColor">
+        <input-field type="colorpicker">
+            <name>primaryTextColor</name>
             <label>Primary Text Color</label>
             <helpText>Main text color for labels and headings</helpText>
         </input-field>
-        <input-field type="colorpicker" name="WindcavePayment.config.secondaryTextColor">
+        <input-field type="colorpicker">
+            <name>secondaryTextColor</name>
             <label>Secondary Text Color</label>
             <helpText>Secondary text color for hints and descriptions</helpText>
         </input-field>
-        <input-field type="text" name="WindcavePayment.config.fontFamily">
+        <input-field type="text">
+            <name>fontFamily</name>
             <label>Font Family</label>
             <helpText>e.g., Arial, Helvetica, sans-serif</helpText>
             <placeholder>inherit</placeholder>
@@ -130,14 +181,10 @@
 
     <card>
         <title>Advanced: Custom CSS</title>
-        <input-field type="textarea" name="WindcavePayment.config.customCss">
+        <input-field type="textarea">
+            <name>customCss</name>
             <label>Custom CSS</label>
             <helpText>Add custom CSS rules to style the drop-in. Use Windcave class names like .windcave-dropin-container, .windcave-dropin-card-submit-button, etc.</helpText>
-            <placeholder>/* Example:
-.windcave-dropin-container {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-*/</placeholder>
         </input-field>
     </card>
 </config>

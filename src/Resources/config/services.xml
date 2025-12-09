@@ -6,34 +6,59 @@
     <services>
         <defaults autowire="true" autoconfigure="true" public="false"/>
 
-        <!-- Installer -->
-        <service id="Windcave\Installer\PaymentMethodInstaller">
-            <argument type="service" id="payment_method.repository"/>
-        </service>
-
-        <!-- Payment Handlers -->
+        <!-- Payment Handlers (Shopware 6.6+ AbstractPaymentHandler) -->
         <service id="Windcave\Payment\Handler\WindcavePaymentHandler">
+            <argument type="service" id="Windcave\Service\WindcaveApiService"/>
+            <argument type="service" id="Windcave\Service\WindcavePayloadFactory"/>
+            <argument type="service" id="Windcave\Service\WindcaveConfig"/>
+            <argument type="service" id="Windcave\Service\WindcaveTokenService"/>
             <argument type="service" id="order_transaction.repository"/>
+            <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
+            <argument type="service" id="monolog.logger"/>
             <tag name="shopware.payment.method"/>
         </service>
         <service id="Windcave\Payment\Handler\WindcaveDropInPaymentHandler">
+            <argument type="service" id="Windcave\Service\WindcaveApiService"/>
+            <argument type="service" id="Windcave\Service\WindcavePayloadFactory"/>
             <argument type="service" id="order_transaction.repository"/>
+            <argument type="service" id="router"/>
+            <argument type="service" id="Windcave\Service\WindcaveTokenService"/>
+            <argument type="service" id="Windcave\Service\WindcaveConfig"/>
+            <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
+            <argument type="service" id="monolog.logger"/>
             <tag name="shopware.payment.method"/>
         </service>
 
         <!-- Core Services -->
-        <service id="Windcave\Service\WindcaveApiService"/>
-        <service id="Windcave\Service\WindcaveConfig"/>
-        <service id="Windcave\Service\WindcavePayloadFactory"/>
+        <service id="Windcave\Service\WindcaveApiService">
+            <argument type="service" id="http_client"/>
+            <argument type="service" id="monolog.logger"/>
+        </service>
+        <service id="Windcave\Service\WindcaveConfig">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+        </service>
+        <service id="Windcave\Service\WindcavePayloadFactory">
+            <argument type="service" id="Windcave\Service\WindcaveConfig"/>
+            <argument type="service" id="router"/>
+            <argument type="service" id="Windcave\Service\WindcaveTokenService"/>
+        </service>
         <service id="Windcave\Service\WindcaveTokenService">
             <argument type="service" id="customer.repository"/>
             <argument type="service" id="order_transaction.repository"/>
         </service>
         <service id="Windcave\Service\WindcaveRefundService">
+            <argument type="service" id="http_client"/>
+            <argument type="service" id="Windcave\Service\WindcaveConfig"/>
             <argument type="service" id="order_transaction.repository"/>
+            <argument type="service" id="monolog.logger"/>
         </service>
         <service id="Windcave\Service\WindcaveSessionService">
+            <argument type="service" id="Windcave\Service\WindcaveApiService"/>
+            <argument type="service" id="Windcave\Service\WindcaveConfig"/>
+            <argument type="service" id="Windcave\Service\WindcaveTokenService"/>
             <argument type="service" id="order_transaction.repository"/>
+            <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
+            <argument type="service" id="monolog.logger"/>
         </service>
 
         <!-- Event Subscribers -->
@@ -41,12 +66,21 @@
             <argument type="service" id="order_transaction.repository"/>
             <tag name="kernel.event_subscriber"/>
         </service>
+        <service id="Windcave\Subscriber\CheckoutConfirmPageSubscriber">
+            <argument type="service" id="Windcave\Service\WindcaveApiService"/>
+            <argument type="service" id="Windcave\Service\WindcaveConfig"/>
+            <argument type="service" id="router"/>
+            <argument type="service" id="monolog.logger"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
 
         <!-- Storefront Controllers -->
         <service id="Windcave\Controller\WindcaveReturnController">
+            <argument type="service" id="order_transaction.repository"/>
             <tag name="controller.service_arguments"/>
         </service>
         <service id="Windcave\Controller\WindcaveDropInController">
+            <argument type="service" id="Windcave\Service\WindcaveSessionService"/>
             <tag name="controller.service_arguments"/>
         </service>
         <service id="Windcave\Controller\WindcaveNotificationController">

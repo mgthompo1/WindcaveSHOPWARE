@@ -8,48 +8,55 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class WindcaveConfig
 {
+    private const CONFIG_PREFIX = 'WindcaveSHOPWARE.config.';
+
     public function __construct(private readonly SystemConfigService $systemConfig)
     {
     }
 
     public function getRestUsername(?string $salesChannelId): string
     {
-        return (string) $this->systemConfig->get('WindcavePayment.config.restUsername', $salesChannelId);
+        return (string) $this->systemConfig->get(self::CONFIG_PREFIX . 'restUsername', $salesChannelId);
     }
 
     public function getRestApiKey(?string $salesChannelId): string
     {
-        return (string) $this->systemConfig->get('WindcavePayment.config.restApiKey', $salesChannelId);
+        return (string) $this->systemConfig->get(self::CONFIG_PREFIX . 'restApiKey', $salesChannelId);
     }
 
     public function getAppleMerchantId(?string $salesChannelId): string
     {
-        return (string) ($this->systemConfig->get('WindcavePayment.config.appleMerchantId', $salesChannelId) ?? '');
+        return (string) ($this->systemConfig->get(self::CONFIG_PREFIX . 'appleMerchantId', $salesChannelId) ?? '');
     }
 
     public function getGoogleMerchantId(?string $salesChannelId): string
     {
-        return (string) ($this->systemConfig->get('WindcavePayment.config.googleMerchantId', $salesChannelId) ?? '');
+        return (string) ($this->systemConfig->get(self::CONFIG_PREFIX . 'googleMerchantId', $salesChannelId) ?? '');
     }
 
     public function isStoreCardEnabled(?string $salesChannelId): bool
     {
-        return (bool) ($this->systemConfig->get('WindcavePayment.config.storeCard', $salesChannelId) ?? false);
+        return (bool) ($this->systemConfig->get(self::CONFIG_PREFIX . 'storeCard', $salesChannelId) ?? false);
     }
 
     public function getStoredCardIndicatorInitial(?string $salesChannelId): string
     {
-        return (string) ($this->systemConfig->get('WindcavePayment.config.storedCardIndicatorInitial', $salesChannelId) ?? 'credentialonfileinitial');
+        return (string) ($this->systemConfig->get(self::CONFIG_PREFIX . 'storedCardIndicatorInitial', $salesChannelId) ?? 'credentialonfileinitial');
     }
 
     public function getStoredCardIndicatorRecurring(?string $salesChannelId): string
     {
-        return (string) ($this->systemConfig->get('WindcavePayment.config.storedCardIndicatorRecurring', $salesChannelId) ?? 'credentialonfile');
+        return (string) ($this->systemConfig->get(self::CONFIG_PREFIX . 'storedCardIndicatorRecurring', $salesChannelId) ?? 'credentialonfile');
     }
 
     public function isTestMode(?string $salesChannelId): bool
     {
-        return (bool) $this->systemConfig->get('WindcavePayment.config.testMode', $salesChannelId);
+        $value = $this->systemConfig->get(self::CONFIG_PREFIX . 'testMode', $salesChannelId);
+        // Handle string "false" which casts to true with (bool)
+        if ($value === 'false' || $value === '0' || $value === '') {
+            return false;
+        }
+        return (bool) $value;
     }
 
     // ========================================
@@ -58,17 +65,17 @@ class WindcaveConfig
 
     public function getDarkModeConfig(?string $salesChannelId): string
     {
-        return (string) ($this->systemConfig->get('WindcavePayment.config.darkModeConfig', $salesChannelId) ?? 'light');
+        return (string) ($this->systemConfig->get(self::CONFIG_PREFIX . 'darkModeConfig', $salesChannelId) ?? 'light');
     }
 
     public function getHideSelectPaymentMethodTitle(?string $salesChannelId): bool
     {
-        return (bool) ($this->systemConfig->get('WindcavePayment.config.hideSelectPaymentMethodTitle', $salesChannelId) ?? false);
+        return (bool) ($this->systemConfig->get(self::CONFIG_PREFIX . 'hideSelectPaymentMethodTitle', $salesChannelId) ?? false);
     }
 
     public function getCustomCss(?string $salesChannelId): string
     {
-        return (string) ($this->systemConfig->get('WindcavePayment.config.customCss', $salesChannelId) ?? '');
+        return (string) ($this->systemConfig->get(self::CONFIG_PREFIX . 'customCss', $salesChannelId) ?? '');
     }
 
     /**
@@ -187,7 +194,7 @@ class WindcaveConfig
      */
     private function getConfigValue(string $key, ?string $salesChannelId): ?string
     {
-        $value = $this->systemConfig->get('WindcavePayment.config.' . $key, $salesChannelId);
+        $value = $this->systemConfig->get(self::CONFIG_PREFIX . $key, $salesChannelId);
         if ($value === null || $value === '') {
             return null;
         }

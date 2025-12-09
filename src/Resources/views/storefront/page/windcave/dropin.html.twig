@@ -2,7 +2,7 @@
 
 {% block base_content %}
     <div class="container windcave-dropin-page">
-        <h1 class="mt-5 mb-3">Windcave Payment</h1>
+        <h1 class="mt-5 mb-3">Complete Your Payment</h1>
 
         {% if windcaveLinks is not empty and windcaveSessionId %}
             {# Custom CSS from admin configuration #}
@@ -12,113 +12,172 @@
             </style>
             {% endif %}
 
-            <div id="windcave-dropin-container" class="mb-3"></div>
-            <p class="text-muted">Completing payment securely via Windcave drop-in.</p>
-            <script async src="{{ windcaveScriptBase }}/js/lib/drop-in-v1.js"></script>
-            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-dropin-v1.js"></script>
-            <script async src="{{ windcaveScriptBase }}/js/lib/hosted-fields-v1.js"></script>
-            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-hostedfields-v1.js"></script>
-            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-applepay-v1.js"></script>
-            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-googlepay-v1.js"></script>
+            <div id="windcave-dropin-container" class="mb-3">
+                <p class="text-muted">Loading secure payment form...</p>
+            </div>
+
+            {# Load Windcave Drop-In scripts (synchronous, order matters!) #}
+            <script src="{{ windcaveScriptBase }}/js/lib/drop-in-v1.js"></script>
+            <script src="{{ windcaveScriptBase }}/js/windcavepayments-dropin-v1.js"></script>
+            <script src="{{ windcaveScriptBase }}/js/lib/hosted-fields-v1.js"></script>
+            <script src="{{ windcaveScriptBase }}/js/windcavepayments-hostedfields-v1.js"></script>
+            <script src="{{ windcaveScriptBase }}/js/windcavepayments-applepay-v1.js"></script>
+            <script src="{{ windcaveScriptBase }}/js/windcavepayments-googlepay-v1.js"></script>
             <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    if (!window.WindcavePayments || !window.WindcavePayments.DropIn) {
-                        console.warn('Windcave drop-in JS not available, falling back to hosted page.');
-                        {% if windcaveHppUrl %}
-                        window.location.href = "{{ windcaveHppUrl }}";
-                        {% endif %}
-                        return;
-                    }
-
-                    var links = {{ windcaveLinks|json_encode|raw }};
-                    var sessionId = "{{ windcaveSessionId }}";
-                    var returnUrl = "{{ windcaveReturnUrl|default('/') }}";
-                    var merchantName = "{{ windcaveMerchantName }}";
-                    var countryCode = "{{ windcaveCountry }}";
-                    var currencyCode = "{{ windcaveCurrency }}";
-                    var isTest = {{ windcaveIsTest ? 'true' : 'false' }};
-                    var appleMerchantId = "{{ windcaveAppleMerchantId }}";
-                    var googleMerchantId = "{{ windcaveGoogleMerchantId }}";
-
-                    {# Styling configuration from admin #}
-                    var darkModeConfig = "{{ windcaveDarkModeConfig|default('light') }}";
-                    var hideSelectPaymentMethodTitle = {{ windcaveHideSelectPaymentMethodTitle ? 'true' : 'false' }};
-                    var customStyles = {{ windcaveStyles|json_encode|raw }};
-
-                    function buildReturnUrl() {
-                        var separator = returnUrl.indexOf('?') >= 0 ? '&' : '?';
-                        return returnUrl + separator + 'sessionId=' + encodeURIComponent(sessionId);
-                    }
-
-                    var options = {
-                        container: 'windcave-dropin-container',
-                        links: links,
-                        darkModeConfig: darkModeConfig,
-                        hideSelectPaymentMethodTitle: hideSelectPaymentMethodTitle,
-                        onSuccess: function (status) {
-                            if (status === '3DSecure') {
-                                return;
-                            }
-                            window.location.href = buildReturnUrl();
-                        },
-                        onError: function () {
-                            {% if windcaveHppUrl %}
-                            window.location.href = "{{ windcaveHppUrl }}";
-                            {% else %}
-                            alert('Windcave payment could not be completed. Please try again or choose another method.');
-                            {% endif %}
-                        },
-                        mobilePayments: {
-                            merchantName: merchantName,
-                            countryCode: countryCode,
-                            currencyCode: currencyCode,
-                            isTest: isTest,
-                            applePay: appleMerchantId ? {
-                                merchantId: appleMerchantId
-                            } : undefined,
-                            googlePay: googleMerchantId ? {
-                                merchantId: googleMerchantId,
-                                googleMerchantId: isTest ? '00000000' : googleMerchantId
-                            } : undefined
-                        }
+                (function() {
+                    var config = {
+                        links: {{ windcaveLinks|json_encode|raw }},
+                        sessionId: "{{ windcaveSessionId }}",
+                        returnUrl: "{{ windcaveReturnUrl|default('/checkout/finish') }}",
+                        hppUrl: "{{ windcaveHppUrl|default('') }}",
+                        merchantName: "{{ windcaveMerchantName }}",
+                        countryCode: "{{ windcaveCountry }}",
+                        currencyCode: "{{ windcaveCurrency }}",
+                        isTest: {{ windcaveIsTest ? 'true' : 'false' }},
+                        appleMerchantId: "{{ windcaveAppleMerchantId }}",
+                        googleMerchantId: "{{ windcaveGoogleMerchantId }}",
+                        darkModeConfig: "{{ windcaveDarkModeConfig|default('light') }}",
+                        hideSelectPaymentMethodTitle: {{ windcaveHideSelectPaymentMethodTitle ? 'true' : 'false' }},
+                        customStyles: {{ windcaveStyles|json_encode|raw }}
                     };
 
-                    {# Apply custom styles if configured #}
-                    if (customStyles && Object.keys(customStyles).length > 0) {
-                        options.styles = customStyles;
+                    // Debug: log all config values
+                    console.log('=== Windcave Drop-In Config ===');
+                    console.log('Session ID:', config.sessionId);
+                    console.log('Links:', JSON.stringify(config.links, null, 2));
+                    console.log('HPP URL:', config.hppUrl);
+                    console.log('Return URL:', config.returnUrl);
+                    console.log('Is Test:', config.isTest);
+                    console.log('Script Base:', '{{ windcaveScriptBase }}');
+
+                    function buildReturnUrl() {
+                        var separator = config.returnUrl.indexOf('?') >= 0 ? '&' : '?';
+                        return config.returnUrl + separator + 'sessionId=' + encodeURIComponent(config.sessionId);
                     }
 
-                    window.windcaveDropIn = WindcavePayments.DropIn.create(
-                        options,
-                        function onCreateSuccess() {
-                            console.log('Windcave Drop-In created');
-                            {# Apply dark mode after creation if needed #}
-                            if (window.windcaveDropIn && darkModeConfig) {
-                                try {
-                                    window.windcaveDropIn.setDarkModeConfig(darkModeConfig);
-                                } catch (e) {
-                                    console.log('Dark mode config not supported or already set');
-                                }
-                            }
-                        },
-                        function onCreateError(err) {
-                            console.error('Windcave Drop-In creation failed', err);
-                            {% if windcaveHppUrl %}
-                            window.location.href = "{{ windcaveHppUrl }}";
-                            {% endif %}
+                    function showError(message) {
+                        console.error('Drop-In Error:', message);
+                        document.getElementById('windcave-dropin-container').innerHTML =
+                            '<div class="alert alert-danger">' +
+                            '<strong>Payment Form Error:</strong> ' + message +
+                            '<br><br>Check browser console for details.' +
+                            (config.hppUrl ? '<br><br><a href="' + config.hppUrl + '" class="btn btn-primary">Use Hosted Payment Page Instead</a>' : '') +
+                            '</div>';
+                    }
+
+                    function initDropIn() {
+                        console.log('Initializing Windcave Drop-In...');
+
+                        // Check if we have the required links
+                        if (!config.links || config.links.length === 0) {
+                            showError('No links returned from Windcave session. Links: ' + JSON.stringify(config.links));
+                            return;
                         }
-                    );
-                });
+
+                        var options = {
+                            container: 'windcave-dropin-container',
+                            links: config.links,
+                            darkModeConfig: config.darkModeConfig,
+                            hideSelectPaymentMethodTitle: config.hideSelectPaymentMethodTitle,
+                            onSuccess: function(status) {
+                                console.log('Payment success, status:', status);
+                                if (status === '3DSecure') {
+                                    return; // Wait for 3DS to complete
+                                }
+                                window.location.href = buildReturnUrl();
+                            },
+                            onError: function(err) {
+                                console.error('Payment onError callback:', err);
+                                showError('Payment error: ' + (err.message || JSON.stringify(err)));
+                            }
+                        };
+
+                        // Add mobile payments config if merchant IDs are set
+                        if (config.appleMerchantId || config.googleMerchantId) {
+                            options.mobilePayments = {
+                                merchantName: config.merchantName,
+                                countryCode: config.countryCode,
+                                currencyCode: config.currencyCode,
+                                isTest: config.isTest
+                            };
+                            if (config.appleMerchantId) {
+                                options.mobilePayments.applePay = { merchantId: config.appleMerchantId };
+                            }
+                            if (config.googleMerchantId) {
+                                options.mobilePayments.googlePay = {
+                                    merchantId: config.googleMerchantId,
+                                    googleMerchantId: config.isTest ? '00000000' : config.googleMerchantId
+                                };
+                            }
+                        }
+
+                        // Apply custom styles if configured
+                        if (config.customStyles && Object.keys(config.customStyles).length > 0) {
+                            options.styles = config.customStyles;
+                        }
+
+                        console.log('Drop-In options:', JSON.stringify(options, null, 2));
+
+                        try {
+                            console.log('Calling WindcavePayments.DropIn.create()...');
+                            window.windcaveDropIn = WindcavePayments.DropIn.create(
+                                options,
+                                function onCreateSuccess() {
+                                    console.log('Windcave Drop-In created successfully!');
+                                },
+                                function onCreateError(err) {
+                                    console.error('Windcave Drop-In creation failed:', err);
+                                    showError('Drop-In creation failed: ' + (err.message || JSON.stringify(err)));
+                                }
+                            );
+                            console.log('WindcavePayments.DropIn.create() returned:', window.windcaveDropIn);
+                        } catch (e) {
+                            console.error('Exception creating Drop-In:', e);
+                            showError('Exception: ' + e.message);
+                        }
+                    }
+
+                    // Wait for DOM and WindcavePayments to be ready
+                    function waitForWindcave() {
+                        var maxAttempts = 50;
+                        var attempts = 0;
+
+                        function check() {
+                            attempts++;
+                            console.log('Checking for WindcavePayments (attempt ' + attempts + ')...');
+                            if (window.WindcavePayments && window.WindcavePayments.DropIn) {
+                                console.log('WindcavePayments.DropIn available!');
+                                initDropIn();
+                            } else if (attempts < maxAttempts) {
+                                setTimeout(check, 100);
+                            } else {
+                                console.error('WindcavePayments not available after ' + (maxAttempts * 100) + 'ms');
+                                console.log('window.WindcavePayments:', window.WindcavePayments);
+                                showError('Windcave SDK failed to load. Check if script URL is correct: {{ windcaveScriptBase }}/js/windcavepayments-dropin-v1.js');
+                            }
+                        }
+                        check();
+                    }
+
+                    // Start initialization
+                    console.log('Starting Windcave Drop-In initialization...');
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', waitForWindcave);
+                    } else {
+                        waitForWindcave();
+                    }
+                })();
             </script>
         {% elseif windcaveHppUrl %}
-            {# Fallback: embed hosted payment page in an iframe #}
-            <p class="text-muted">Completing payment securely via Windcave hosted page.</p>
-            <div class="ratio ratio-4x3 mb-3">
-                <iframe src="{{ windcaveHppUrl }}" title="Windcave Payment" allowpaymentrequest sandbox="allow-scripts allow-forms allow-same-origin allow-popups" style="border:1px solid #ccc;border-radius:6px;"></iframe>
-            </div>
-            <p>If the payment page does not load, <a href="{{ windcaveHppUrl }}" target="_top" rel="noopener">open it in a new window</a>.</p>
+            {# Fallback: redirect to hosted payment page #}
+            <p class="text-muted">Redirecting to secure payment page...</p>
+            <script>window.location.href = "{{ windcaveHppUrl }}";</script>
+            <noscript>
+                <p><a href="{{ windcaveHppUrl }}">Click here to continue to payment</a></p>
+            </noscript>
         {% else %}
-            <p class="text-danger">Unable to start Windcave payment session.</p>
+            <p class="text-danger">Unable to start Windcave payment session. Please go back and try again.</p>
+            <a href="/checkout/confirm" class="btn btn-primary">Return to Checkout</a>
         {% endif %}
     </div>
 {% endblock %}
