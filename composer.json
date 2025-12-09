@@ -1,0 +1,26 @@
+{
+  "name": "mgthompo1/windcave-shopware",
+  "description": "Windcave hosted payments integration for Shopware",
+  "type": "shopware-platform-plugin",
+  "version": "0.1.0",
+  "license": "MIT",
+  "require": {
+    "shopware/core": "^6.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Windcave\\": "src/"
+    }
+  },
+  "extra": {
+    "shopware-plugin-class": "Windcave\\WindcavePayment",
+    "label": {
+      "en-GB": "Windcave Payment",
+      "de-DE": "Windcave Zahlung"
+    },
+    "description": {
+      "en-GB": "Windcave hosted payment page for Shopware checkout",
+      "de-DE": "Windcave gehostete Zahlungsseite für den Shopware Checkout"
+    }
+  }
+}

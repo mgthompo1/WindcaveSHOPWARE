@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services https://symfony.com/schema/dic/services-1.0.xsd">
+
+    <services>
+        <defaults autowire="true" autoconfigure="true" public="false"/>
+
+        <service id="Windcave\Installer\PaymentMethodInstaller">
+            <argument type="service" id="payment_method.repository"/>
+        </service>
+
+        <service id="Windcave\Payment\Handler\WindcavePaymentHandler">
+            <tag name="shopware.payment.method"/>
+        </service>
+        <service id="Windcave\Payment\Handler\WindcaveDropInPaymentHandler">
+            <argument type="service" id="order_transaction.repository"/>
+            <tag name="shopware.payment.method"/>
+        </service>
+
+        <service id="Windcave\Service\WindcaveApiService"/>
+        <service id="Windcave\Service\WindcaveConfig"/>
+        <service id="Windcave\Service\WindcavePayloadFactory"/>
+
+        <service id="Windcave\Controller\WindcaveReturnController">
+            <tag name="controller.service_arguments"/>
+        </service>
+        <service id="Windcave\Controller\WindcaveDropInController">
+            <argument type="service" id="order_transaction.repository"/>
+            <tag name="controller.service_arguments"/>
+        </service>
+    </services>
+</container>

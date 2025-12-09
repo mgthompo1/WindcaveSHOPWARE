@@ -1,0 +1,97 @@
+{% sw_extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_content %}
+    <div class="container windcave-dropin-page">
+        <h1 class="mt-5 mb-3">Windcave Payment</h1>
+
+        {% if windcaveLinks is not empty and windcaveSessionId %}
+            <div id="windcave-dropin-container" class="mb-3"></div>
+            <p class="text-muted">Completing payment securely via Windcave drop-in.</p>
+            <script async src="{{ windcaveScriptBase }}/js/lib/drop-in-v1.js"></script>
+            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-dropin-v1.js"></script>
+            <script async src="{{ windcaveScriptBase }}/js/lib/hosted-fields-v1.js"></script>
+            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-hostedfields-v1.js"></script>
+            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-applepay-v1.js"></script>
+            <script async src="{{ windcaveScriptBase }}/js/windcavepayments-googlepay-v1.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    if (!window.WindcavePayments || !window.WindcavePayments.DropIn) {
+                        console.warn('Windcave drop-in JS not available, falling back to hosted page.');
+                        {% if windcaveHppUrl %}
+                        window.location.href = "{{ windcaveHppUrl }}";
+                        {% endif %}
+                        return;
+                    }
+
+                    var links = {{ windcaveLinks|json_encode|raw }};
+                    var sessionId = "{{ windcaveSessionId }}";
+                    var returnUrl = "{{ windcaveReturnUrl|default('/') }}";
+                    var merchantName = "{{ windcaveMerchantName }}";
+                    var countryCode = "{{ windcaveCountry }}";
+                    var currencyCode = "{{ windcaveCurrency }}";
+                    var isTest = {{ windcaveIsTest ? 'true' : 'false' }};
+                    var appleMerchantId = "{{ windcaveAppleMerchantId }}";
+                    var googleMerchantId = "{{ windcaveGoogleMerchantId }}";
+
+                    function buildReturnUrl() {
+                        var separator = returnUrl.indexOf('?') >= 0 ? '&' : '?';
+                        return returnUrl + separator + 'sessionId=' + encodeURIComponent(sessionId);
+                    }
+
+                    var options = {
+                        container: 'windcave-dropin-container',
+                        links: links,
+                        onSuccess: function (status) {
+                            if (status === '3DSecure') {
+                                return;
+                            }
+                            window.location.href = buildReturnUrl();
+                        },
+                        onError: function () {
+                            {% if windcaveHppUrl %}
+                            window.location.href = "{{ windcaveHppUrl }}";
+                            {% else %}
+                            alert('Windcave payment could not be completed. Please try again or choose another method.');
+                            {% endif %}
+                        },
+                        mobilePayments: {
+                            merchantName: merchantName,
+                            countryCode: countryCode,
+                            currencyCode: currencyCode,
+                            isTest: isTest,
+                            applePay: appleMerchantId ? {
+                                merchantId: appleMerchantId
+                            } : undefined,
+                            googlePay: googleMerchantId ? {
+                                merchantId: googleMerchantId,
+                                googleMerchantId: isTest ? '00000000' : googleMerchantId
+                            } : undefined
+                        }
+                    };
+
+                    window.windcaveDropIn = WindcavePayments.DropIn.create(
+                        options,
+                        function onCreateSuccess() {
+                            console.log('Windcave Drop-In created');
+                        },
+                        function onCreateError(err) {
+                            console.error('Windcave Drop-In creation failed', err);
+                            {% if windcaveHppUrl %}
+                            window.location.href = "{{ windcaveHppUrl }}";
+                            {% endif %}
+                        }
+                    );
+                });
+            </script>
+        {% elseif windcaveHppUrl %}
+            {# Fallback: embed hosted payment page in an iframe #}
+            <p class="text-muted">Completing payment securely via Windcave hosted page.</p>
+            <div class="ratio ratio-4x3 mb-3">
+                <iframe src="{{ windcaveHppUrl }}" title="Windcave Payment" allowpaymentrequest sandbox="allow-scripts allow-forms allow-same-origin allow-popups" style="border:1px solid #ccc;border-radius:6px;"></iframe>
+            </div>
+            <p>If the payment page does not load, <a href="{{ windcaveHppUrl }}" target="_top" rel="noopener">open it in a new window</a>.</p>
+        {% else %}
+            <p class="text-danger">Unable to start Windcave payment session.</p>
+        {% endif %}
+    </div>
+{% endblock %}

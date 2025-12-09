@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/System/SystemConfig/Schema/config-1.0.xsd">
+    <card>
+        <title>Windcave REST API</title>
+        <input-field type="text" name="WindcavePayment.config.restUsername" label="REST API Username" required="true"/>
+        <input-field type="text" name="WindcavePayment.config.restApiKey" label="REST API Key" required="true"/>
+        <input-field type="bool" name="WindcavePayment.config.testMode" label="Test mode" defaultValue="true"/>
+        <input-field type="text" name="WindcavePayment.config.appleMerchantId" label="Apple Pay merchantId (Windcave)" required="false"/>
+        <input-field type="text" name="WindcavePayment.config.googleMerchantId" label="Google Pay merchantId (Windcave/Google)" required="false"/>
+    </card>
+</config>
