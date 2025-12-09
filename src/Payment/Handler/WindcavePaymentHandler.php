@@ -9,6 +9,7 @@ use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -26,6 +27,7 @@ class WindcavePaymentHandler implements AsynchronousPaymentHandlerInterface
         private readonly RequestStack $requestStack,
         private readonly WindcaveConfig $config,
         private readonly WindcaveTokenService $tokenService,
+        private readonly EntityRepository $orderTransactionRepository,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -57,15 +59,31 @@ class WindcavePaymentHandler implements AsynchronousPaymentHandlerInterface
             );
         }
 
+        // Store session ID for FPRN notification matching
+        $this->orderTransactionRepository->update([
+            [
+                'id' => $transaction->getOrderTransaction()->getId(),
+                'customFields' => [
+                    'windcaveSessionId' => $session->getId(),
+                ],
+            ],
+        ], $salesChannelContext->getContext());
+
         return new RedirectResponse($hpp);
     }
 
     public function finalize(AsyncPaymentTransactionStruct $transaction, RequestDataBag $dataBag, SalesChannelContext $salesChannelContext): void
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $windcaveResult = $request?->query->get('sessionId') ?? $request?->query->get('result');
+        // Support both storefront (RequestStack) and headless (RequestDataBag) flows
+        $windcaveResult = $dataBag->get('sessionId') ?? $dataBag->get('result');
+
+        // Fall back to request query parameters for storefront flow
+        if (!$windcaveResult) {
+            $request = $this->requestStack->getCurrentRequest();
+            $windcaveResult = $request?->query->get('sessionId') ?? $request?->query->get('result');
+        }
+
         $salesChannelId = $salesChannelContext->getSalesChannelId();
-        $testMode = $this->config->isTestMode($salesChannelId);
 
         if (!$windcaveResult) {
             throw new AsyncPaymentFinalizeException(
@@ -99,6 +117,27 @@ class WindcavePaymentHandler implements AsynchronousPaymentHandlerInterface
             );
         }
 
+        // Store transaction data for refunds
+        $transactionData = [
+            'id' => $transaction->getOrderTransaction()->getId(),
+            'customFields' => [],
+        ];
+
+        if ($result->getTransactionId()) {
+            $transactionData['customFields']['windcaveTransactionId'] = $result->getTransactionId();
+        }
+        if ($result->getAmount()) {
+            $transactionData['customFields']['windcaveAmount'] = $result->getAmount();
+        }
+        if ($result->getCurrency()) {
+            $transactionData['customFields']['windcaveCurrency'] = $result->getCurrency();
+        }
+
+        if (!empty($transactionData['customFields'])) {
+            $this->orderTransactionRepository->update([$transactionData], $salesChannelContext->getContext());
+        }
+
+        // Handle card tokenization
         $cardId = $result->getCardId();
         $customerId = $salesChannelContext->getCustomer()?->getId();
         if ($cardId && $customerId) {

@@ -12,4 +12,132 @@
         <input-field type="text" name="WindcavePayment.config.storedCardIndicatorInitial" label="Stored card indicator (initial)" defaultValue="credentialonfileinitial"/>
         <input-field type="text" name="WindcavePayment.config.storedCardIndicatorRecurring" label="Stored card indicator (recurring)" defaultValue="credentialonfile"/>
     </card>
+
+    <card>
+        <title>Drop-in Appearance</title>
+        <input-field type="single-select" name="WindcavePayment.config.darkModeConfig">
+            <label>Theme Mode</label>
+            <helpText>Controls the color theme of the drop-in payment form</helpText>
+            <defaultValue>light</defaultValue>
+            <options>
+                <option>
+                    <id>light</id>
+                    <name>Light</name>
+                </option>
+                <option>
+                    <id>dark</id>
+                    <name>Dark</name>
+                </option>
+                <option>
+                    <id>auto</id>
+                    <name>Auto (match browser)</name>
+                </option>
+            </options>
+        </input-field>
+        <input-field type="bool" name="WindcavePayment.config.hideSelectPaymentMethodTitle" label="Hide 'Select Payment Method' title" defaultValue="false">
+            <helpText>Hide the header text above payment options</helpText>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Drop-in Button Styling</title>
+        <input-field type="colorpicker" name="WindcavePayment.config.submitButtonBgColor">
+            <label>Submit Button Background Color</label>
+            <helpText>Background color for the Submit/Pay button</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.submitButtonTextColor">
+            <label>Submit Button Text Color</label>
+            <helpText>Text color for the Submit/Pay button</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.submitButtonHoverBgColor">
+            <label>Submit Button Hover Background</label>
+            <helpText>Background color when hovering over Submit button</helpText>
+        </input-field>
+        <input-field type="text" name="WindcavePayment.config.submitButtonBorderRadius">
+            <label>Submit Button Border Radius</label>
+            <helpText>e.g., 4px, 8px, 0</helpText>
+            <placeholder>4px</placeholder>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Drop-in Container Styling</title>
+        <input-field type="colorpicker" name="WindcavePayment.config.containerBgColor">
+            <label>Container Background Color</label>
+            <helpText>Background color for the main drop-in container</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.containerBorderColor">
+            <label>Container Border Color</label>
+            <helpText>Border color for the drop-in container</helpText>
+        </input-field>
+        <input-field type="text" name="WindcavePayment.config.containerBorderRadius">
+            <label>Container Border Radius</label>
+            <helpText>e.g., 8px, 12px, 0</helpText>
+            <placeholder>8px</placeholder>
+        </input-field>
+        <input-field type="text" name="WindcavePayment.config.containerPadding">
+            <label>Container Padding</label>
+            <helpText>e.g., 16px, 20px 24px</helpText>
+            <placeholder>16px</placeholder>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Drop-in Input Field Styling</title>
+        <input-field type="colorpicker" name="WindcavePayment.config.inputBgColor">
+            <label>Input Background Color</label>
+            <helpText>Background color for card input fields</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.inputBorderColor">
+            <label>Input Border Color</label>
+            <helpText>Border color for card input fields</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.inputFocusBorderColor">
+            <label>Input Focus Border Color</label>
+            <helpText>Border color when input is focused</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.inputValidBorderColor">
+            <label>Input Valid Border Color</label>
+            <helpText>Border color when input is valid (e.g., green)</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.inputInvalidBorderColor">
+            <label>Input Invalid Border Color</label>
+            <helpText>Border color when input is invalid (e.g., red)</helpText>
+        </input-field>
+        <input-field type="text" name="WindcavePayment.config.inputBorderRadius">
+            <label>Input Border Radius</label>
+            <helpText>e.g., 4px, 6px, 0</helpText>
+            <placeholder>4px</placeholder>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Drop-in Text Styling</title>
+        <input-field type="colorpicker" name="WindcavePayment.config.primaryTextColor">
+            <label>Primary Text Color</label>
+            <helpText>Main text color for labels and headings</helpText>
+        </input-field>
+        <input-field type="colorpicker" name="WindcavePayment.config.secondaryTextColor">
+            <label>Secondary Text Color</label>
+            <helpText>Secondary text color for hints and descriptions</helpText>
+        </input-field>
+        <input-field type="text" name="WindcavePayment.config.fontFamily">
+            <label>Font Family</label>
+            <helpText>e.g., Arial, Helvetica, sans-serif</helpText>
+            <placeholder>inherit</placeholder>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Advanced: Custom CSS</title>
+        <input-field type="textarea" name="WindcavePayment.config.customCss">
+            <label>Custom CSS</label>
+            <helpText>Add custom CSS rules to style the drop-in. Use Windcave class names like .windcave-dropin-container, .windcave-dropin-card-submit-button, etc.</helpText>
+            <placeholder>/* Example:
+.windcave-dropin-container {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+*/</placeholder>
+        </input-field>
+    </card>
 </config>

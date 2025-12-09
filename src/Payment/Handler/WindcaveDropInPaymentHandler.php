@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Windcave\Service\WindcaveApiService;
+use Windcave\Service\WindcaveConfig;
 use Windcave\Service\WindcavePayloadFactory;
 use Windcave\Service\WindcaveTokenService;
 
@@ -28,6 +29,7 @@ class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterfac
         private readonly RequestStack $requestStack,
         private readonly UrlGeneratorInterface $router,
         private readonly WindcaveTokenService $tokenService,
+        private readonly WindcaveConfig $config,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -50,17 +52,18 @@ class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterfac
             );
         }
 
+        // Store session data for drop-in page rendering
+        // Note: We do NOT store API credentials - they're fetched from config during finalize
         $this->orderTransactionRepository->upsert(
             [
                 [
                     'id' => $transaction->getOrderTransaction()->getId(),
                     'customFields' => [
                         'windcaveDropInSession' => $session->asArray(),
+                        'windcaveSessionId' => $session->getId(),
                         'windcaveReturnUrl' => $returnUrl,
                         'windcaveDropInTestMode' => $payload->testMode,
                         'windcaveDropInScriptBase' => $payload->testMode ? 'https://uat.windcave.com' : 'https://sec.windcave.com',
-                        'windcaveDropInAuthUser' => $payload->username,
-                        'windcaveDropInAuthKey' => $payload->apiKey,
                         'windcaveAppleMerchantId' => $this->payloadFactory->getConfig()->getAppleMerchantId($salesChannelContext->getSalesChannelId()),
                         'windcaveGoogleMerchantId' => $this->payloadFactory->getConfig()->getGoogleMerchantId($salesChannelContext->getSalesChannelId()),
                     ],
@@ -82,13 +85,22 @@ class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterfac
 
     public function finalize(AsyncPaymentTransactionStruct $transaction, RequestDataBag $dataBag, SalesChannelContext $salesChannelContext): void
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $windcaveResult = $request?->query->get('result');
+        // Support both storefront (RequestStack) and headless (RequestDataBag) flows
+        $windcaveResult = $dataBag->get('sessionId') ?? $dataBag->get('result');
+
+        // Fall back to request query parameters for storefront flow
+        if (!$windcaveResult) {
+            $request = $this->requestStack->getCurrentRequest();
+            $windcaveResult = $request?->query->get('result') ?? $request?->query->get('sessionId');
+        }
+
         $customFields = $transaction->getOrderTransaction()->getCustomFields() ?? [];
-        $sessionData = $customFields['windcaveDropInSession'] ?? null;
         $testMode = (bool) ($customFields['windcaveDropInTestMode'] ?? false);
-        $username = (string) ($customFields['windcaveDropInAuthUser'] ?? '');
-        $apiKey = (string) ($customFields['windcaveDropInAuthKey'] ?? '');
+
+        // Get credentials from config (NOT from stored customFields for security)
+        $salesChannelId = $salesChannelContext->getSalesChannelId();
+        $username = $this->config->getRestUsername($salesChannelId);
+        $apiKey = $this->config->getRestApiKey($salesChannelId);
 
         if (!$windcaveResult) {
             throw new AsyncPaymentFinalizeException(
@@ -100,8 +112,8 @@ class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterfac
         try {
             $dropInPayload = $this->payloadFactory->dropInPayload($transaction, $salesChannelContext, (string) ($customFields['windcaveReturnUrl'] ?? ''));
             $dropInPayload = new \Windcave\Service\WindcaveSessionRequestPayload(
-                username: $username ?: $dropInPayload->username,
-                apiKey: $apiKey ?: $dropInPayload->apiKey,
+                username: $username,
+                apiKey: $apiKey,
                 amount: $dropInPayload->amount,
                 currency: $dropInPayload->currency,
                 merchantReference: $dropInPayload->merchantReference,
@@ -135,6 +147,27 @@ class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterfac
             );
         }
 
+        // Store transaction data for refunds
+        $transactionData = [
+            'id' => $transaction->getOrderTransaction()->getId(),
+            'customFields' => [],
+        ];
+
+        if ($result->getTransactionId()) {
+            $transactionData['customFields']['windcaveTransactionId'] = $result->getTransactionId();
+        }
+        if ($result->getAmount()) {
+            $transactionData['customFields']['windcaveAmount'] = $result->getAmount();
+        }
+        if ($result->getCurrency()) {
+            $transactionData['customFields']['windcaveCurrency'] = $result->getCurrency();
+        }
+
+        if (!empty($transactionData['customFields'])) {
+            $this->orderTransactionRepository->update([$transactionData], $salesChannelContext->getContext());
+        }
+
+        // Handle card tokenization
         $cardId = $result->getCardId();
         $customerId = $salesChannelContext->getCustomer()?->getId();
         if ($cardId && $customerId) {

@@ -31,6 +31,37 @@ class PaymentMethodInstaller
         $this->upsertPaymentMethod($context, true);
     }
 
+    public function deactivate(Context $context): void
+    {
+        $this->setPaymentMethodsActive($context, false);
+    }
+
+    private function setPaymentMethodsActive(Context $context, bool $active): void
+    {
+        $handlers = [
+            WindcavePaymentHandler::class,
+            WindcaveDropInPaymentHandler::class,
+        ];
+
+        foreach ($handlers as $handlerIdentifier) {
+            $existing = $this->paymentMethodRepository->search(
+                (new Criteria())->addFilter(
+                    new EqualsFilter('handlerIdentifier', $handlerIdentifier)
+                ),
+                $context
+            )->first();
+
+            if ($existing) {
+                $this->paymentMethodRepository->update([
+                    [
+                        'id' => $existing->getId(),
+                        'active' => $active,
+                    ],
+                ], $context);
+            }
+        }
+    }
+
     private function upsertPaymentMethod(Context $context, bool $active): void
     {
         $pluginId = $this->pluginIdProvider->getPluginIdByBaseClass(

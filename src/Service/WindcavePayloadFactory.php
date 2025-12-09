@@ -61,6 +61,13 @@ class WindcavePayloadFactory
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
+        // FPRN notification URL - Windcave will send payment result here
+        $notificationUrl = $this->router->generate(
+            'frontend.windcave.notification',
+            [],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
         $restUser = $this->config->getRestUsername($salesChannelId);
         $restKey = $this->config->getRestApiKey($salesChannelId);
         $testMode = $this->config->isTestMode($salesChannelId);
@@ -81,7 +88,7 @@ class WindcavePayloadFactory
             approvedUrl: $approvedUrl,
             declinedUrl: $declinedUrl,
             cancelledUrl: $cancelledUrl,
-            notificationUrl: $returnUrl,
+            notificationUrl: $notificationUrl,
             testMode: $testMode,
             customerEmail: $customerEmail ?: null,
             customerPhone: $billing?->getPhoneNumber(),
@@ -98,6 +105,45 @@ class WindcavePayloadFactory
     public function getConfig(): WindcaveConfig
     {
         return $this->config;
+    }
+
+    /**
+     * Create a minimal payload for drop-in finalization (session query).
+     * This is used when we need to query the session result without all the address data.
+     */
+    public function dropInPayload(
+        AsyncPaymentTransactionStruct $transaction,
+        SalesChannelContext $context,
+        string $returnUrl
+    ): WindcaveSessionRequestPayload {
+        $order = $transaction->getOrder();
+        $currency = $order->getCurrency()?->getIsoCode() ?? $context->getCurrency()->getIsoCode();
+        $total = $transaction->getOrderTransaction()->getAmount()->getTotalPrice();
+        $salesChannelId = $context->getSalesChannelId();
+
+        $restUser = $this->config->getRestUsername($salesChannelId);
+        $restKey = $this->config->getRestApiKey($salesChannelId);
+        $testMode = $this->config->isTestMode($salesChannelId);
+
+        $notificationUrl = $this->router->generate(
+            'frontend.windcave.notification',
+            [],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
+        return new WindcaveSessionRequestPayload(
+            username: $restUser,
+            apiKey: $restKey,
+            amount: (string) $total,
+            currency: $currency,
+            merchantReference: $order->getOrderNumber() ?? $order->getId(),
+            language: 'en',
+            approvedUrl: $returnUrl,
+            declinedUrl: $returnUrl,
+            cancelledUrl: $returnUrl,
+            notificationUrl: $notificationUrl,
+            testMode: $testMode
+        );
     }
 
     private function mapAddress(?\Shopware\Core\Checkout\Order\Aggregate\OrderAddress\OrderAddressEntity $address): ?array

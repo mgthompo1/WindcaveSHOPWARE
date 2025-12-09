@@ -9,7 +9,10 @@ class WindcaveResult
     public function __construct(
         private readonly bool $success,
         private readonly string $message,
-        private readonly ?string $cardId = null
+        private readonly ?string $cardId = null,
+        private readonly ?string $transactionId = null,
+        private readonly ?string $amount = null,
+        private readonly ?string $currency = null
     ) {
     }
 
@@ -26,5 +29,20 @@ class WindcaveResult
     public function getCardId(): ?string
     {
         return $this->cardId;
+    }
+
+    public function getTransactionId(): ?string
+    {
+        return $this->transactionId;
+    }
+
+    public function getAmount(): ?string
+    {
+        return $this->amount;
+    }
+
+    public function getCurrency(): ?string
+    {
+        return $this->currency;
     }
 }

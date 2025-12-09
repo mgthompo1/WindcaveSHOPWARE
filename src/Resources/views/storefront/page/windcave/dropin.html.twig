@@ -5,6 +5,13 @@
         <h1 class="mt-5 mb-3">Windcave Payment</h1>
 
         {% if windcaveLinks is not empty and windcaveSessionId %}
+            {# Custom CSS from admin configuration #}
+            {% if windcaveCustomCss %}
+            <style>
+                {{ windcaveCustomCss|raw }}
+            </style>
+            {% endif %}
+
             <div id="windcave-dropin-container" class="mb-3"></div>
             <p class="text-muted">Completing payment securely via Windcave drop-in.</p>
             <script async src="{{ windcaveScriptBase }}/js/lib/drop-in-v1.js"></script>
@@ -33,6 +40,11 @@
                     var appleMerchantId = "{{ windcaveAppleMerchantId }}";
                     var googleMerchantId = "{{ windcaveGoogleMerchantId }}";
 
+                    {# Styling configuration from admin #}
+                    var darkModeConfig = "{{ windcaveDarkModeConfig|default('light') }}";
+                    var hideSelectPaymentMethodTitle = {{ windcaveHideSelectPaymentMethodTitle ? 'true' : 'false' }};
+                    var customStyles = {{ windcaveStyles|json_encode|raw }};
+
                     function buildReturnUrl() {
                         var separator = returnUrl.indexOf('?') >= 0 ? '&' : '?';
                         return returnUrl + separator + 'sessionId=' + encodeURIComponent(sessionId);
@@ -41,6 +53,8 @@
                     var options = {
                         container: 'windcave-dropin-container',
                         links: links,
+                        darkModeConfig: darkModeConfig,
+                        hideSelectPaymentMethodTitle: hideSelectPaymentMethodTitle,
                         onSuccess: function (status) {
                             if (status === '3DSecure') {
                                 return;
@@ -69,10 +83,23 @@
                         }
                     };
 
+                    {# Apply custom styles if configured #}
+                    if (customStyles && Object.keys(customStyles).length > 0) {
+                        options.styles = customStyles;
+                    }
+
                     window.windcaveDropIn = WindcavePayments.DropIn.create(
                         options,
                         function onCreateSuccess() {
                             console.log('Windcave Drop-In created');
+                            {# Apply dark mode after creation if needed #}
+                            if (window.windcaveDropIn && darkModeConfig) {
+                                try {
+                                    window.windcaveDropIn.setDarkModeConfig(darkModeConfig);
+                                } catch (e) {
+                                    console.log('Dark mode config not supported or already set');
+                                }
+                            }
                         },
                         function onCreateError(err) {
                             console.error('Windcave Drop-In creation failed', err);

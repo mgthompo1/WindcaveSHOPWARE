@@ -115,11 +115,17 @@ class WindcaveApiService
         $data = $response->toArray(false);
         $state = \strtolower((string) ($data['state'] ?? ''));
         $cardId = $this->extractCardId($data);
+        $transactionId = $this->extractTransactionId($data);
+        $amount = $this->extractAmount($data);
+        $currency = $this->extractCurrency($data);
 
         return new WindcaveResult(
             success: \in_array($state, ['approved', 'complete', 'completed'], true),
             message: (string) ($data['state'] ?? ''),
-            cardId: $cardId
+            cardId: $cardId,
+            transactionId: $transactionId,
+            amount: $amount,
+            currency: $currency
         );
     }
 
@@ -131,6 +137,53 @@ class WindcaveApiService
 
         if (isset($data['card']['id'])) {
             return (string) $data['card']['id'];
+        }
+
+        return null;
+    }
+
+    private function extractTransactionId(array $data): ?string
+    {
+        // The transaction ID is in the transactions array
+        if (isset($data['transactions'][0]['id'])) {
+            return (string) $data['transactions'][0]['id'];
+        }
+
+        // Also check links for transaction reference
+        if (isset($data['links'])) {
+            foreach ($data['links'] as $link) {
+                if (($link['rel'] ?? '') === 'transaction' && isset($link['href'])) {
+                    // Extract ID from URL like https://sec.windcave.com/api/v1/transactions/0000000c01159507
+                    $parts = explode('/', $link['href']);
+                    return end($parts);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function extractAmount(array $data): ?string
+    {
+        if (isset($data['transactions'][0]['amount'])) {
+            return (string) $data['transactions'][0]['amount'];
+        }
+
+        if (isset($data['amount'])) {
+            return (string) $data['amount'];
+        }
+
+        return null;
+    }
+
+    private function extractCurrency(array $data): ?string
+    {
+        if (isset($data['transactions'][0]['currency'])) {
+            return (string) $data['transactions'][0]['currency'];
+        }
+
+        if (isset($data['currency'])) {
+            return (string) $data['currency'];
         }
 
         return null;

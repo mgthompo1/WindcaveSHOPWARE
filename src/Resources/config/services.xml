@@ -6,11 +6,14 @@
     <services>
         <defaults autowire="true" autoconfigure="true" public="false"/>
 
+        <!-- Installer -->
         <service id="Windcave\Installer\PaymentMethodInstaller">
             <argument type="service" id="payment_method.repository"/>
         </service>
 
+        <!-- Payment Handlers -->
         <service id="Windcave\Payment\Handler\WindcavePaymentHandler">
+            <argument type="service" id="order_transaction.repository"/>
             <tag name="shopware.payment.method"/>
         </service>
         <service id="Windcave\Payment\Handler\WindcaveDropInPaymentHandler">
@@ -18,6 +21,7 @@
             <tag name="shopware.payment.method"/>
         </service>
 
+        <!-- Core Services -->
         <service id="Windcave\Service\WindcaveApiService"/>
         <service id="Windcave\Service\WindcaveConfig"/>
         <service id="Windcave\Service\WindcavePayloadFactory"/>
@@ -25,12 +29,32 @@
             <argument type="service" id="customer.repository"/>
             <argument type="service" id="order_transaction.repository"/>
         </service>
+        <service id="Windcave\Service\WindcaveRefundService">
+            <argument type="service" id="order_transaction.repository"/>
+        </service>
+        <service id="Windcave\Service\WindcaveSessionService">
+            <argument type="service" id="order_transaction.repository"/>
+        </service>
 
+        <!-- Event Subscribers -->
+        <service id="Windcave\EventSubscriber\PaymentStatusSubscriber">
+            <argument type="service" id="order_transaction.repository"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <!-- Storefront Controllers -->
         <service id="Windcave\Controller\WindcaveReturnController">
             <tag name="controller.service_arguments"/>
         </service>
         <service id="Windcave\Controller\WindcaveDropInController">
-            <argument type="service" id="order_transaction.repository"/>
+            <tag name="controller.service_arguments"/>
+        </service>
+        <service id="Windcave\Controller\WindcaveNotificationController">
+            <tag name="controller.service_arguments"/>
+        </service>
+
+        <!-- Store API Controllers (Headless) -->
+        <service id="Windcave\Controller\Api\WindcaveStoreApiController">
             <tag name="controller.service_arguments"/>
         </service>
     </services>
