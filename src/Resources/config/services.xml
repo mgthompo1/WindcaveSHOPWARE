@@ -91,5 +91,25 @@
         <service id="Windcave\Controller\Api\WindcaveStoreApiController">
             <tag name="controller.service_arguments"/>
         </service>
+
+        <!-- Admin API Controllers -->
+        <service id="Windcave\Controller\Api\WindcaveAdminApiController">
+            <argument type="service" id="Windcave\Service\WindcaveApiService"/>
+            <argument type="service" id="Windcave\Service\WindcaveConfig"/>
+            <argument type="service" id="windcave_transaction.repository"/>
+            <argument type="service" id="monolog.logger"/>
+            <tag name="controller.service_arguments"/>
+        </service>
+
+        <!-- Entity Definitions -->
+        <service id="Windcave\Core\Content\Transaction\WindcaveTransactionDefinition">
+            <tag name="shopware.entity.definition" entity="windcave_transaction"/>
+        </service>
+
+        <!-- Transaction Repository Service -->
+        <service id="Windcave\Service\WindcaveTransactionRepository">
+            <argument type="service" id="windcave_transaction.repository"/>
+            <argument type="service" id="monolog.logger"/>
+        </service>
     </services>
 </container>

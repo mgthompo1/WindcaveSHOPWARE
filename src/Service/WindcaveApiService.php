@@ -201,4 +201,79 @@ class WindcaveApiService
 
         return null;
     }
+
+    /**
+     * Test API credentials by making a minimal request to Windcave.
+     * Uses the sessions endpoint with minimal data to validate credentials.
+     */
+    public function testCredentials(string $username, string $apiKey, bool $testMode): array
+    {
+        $endpoint = $testMode ? self::TEST_SESSION_ENDPOINT : self::LIVE_SESSION_ENDPOINT;
+
+        $startTime = microtime(true);
+
+        try {
+            // Make a minimal session request with invalid/minimal data
+            // Windcave will return 401 for bad credentials or 400 for valid credentials with bad data
+            $response = $this->httpClient->request('POST', $endpoint, [
+                'json' => [
+                    'type' => 'purchase',
+                    'amount' => '0.01',
+                    'currency' => 'NZD',
+                    'merchantReference' => 'credential-test-' . time(),
+                    'methods' => ['card'],
+                ],
+                'auth_basic' => [$username, $apiKey],
+            ]);
+
+            $responseTime = round((microtime(true) - $startTime) * 1000);
+            $status = $response->getStatusCode();
+
+            // 200/202 means credentials are valid and request succeeded
+            if ($status === 200 || $status === 202) {
+                return [
+                    'success' => true,
+                    'message' => 'Credentials are valid',
+                    'response_time_ms' => $responseTime,
+                    'environment' => $testMode ? 'UAT (Test)' : 'Production',
+                ];
+            }
+
+            // Parse error response
+            $data = $response->toArray(false);
+
+            return [
+                'success' => false,
+                'message' => $data['message'] ?? 'Unknown error',
+                'response_time_ms' => $responseTime,
+                'status_code' => $status,
+            ];
+
+        } catch (\Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface $e) {
+            $responseTime = round((microtime(true) - $startTime) * 1000);
+            $response = $e->getResponse();
+            $status = $response->getStatusCode();
+
+            // 401 = invalid credentials
+            if ($status === 401) {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid credentials. Please check your REST Username and API Key.',
+                    'response_time_ms' => $responseTime,
+                    'status_code' => $status,
+                ];
+            }
+
+            // 400 = valid credentials but bad request (which is fine for testing)
+            if ($status === 400) {
+                return [
+                    'success' => true,
+                    'message' => 'Credentials are valid (request rejected for other reasons, which is expected for test)',
+                    'response_time_ms' => $responseTime,
+                ];
+            }
+
+            throw $e;
+        }
+    }
 }

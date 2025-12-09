@@ -1,0 +1,126 @@
+{% block windcave_payment_details %}
+<sw-card
+    v-if="isWindcavePayment"
+    class="windcave-payment-details"
+    :title="'Windcave Payment Details'"
+    :isLoading="false"
+>
+    {% block windcave_payment_details_header %}
+    <template #toolbar>
+        <sw-label
+            :variant="stateVariant"
+            size="small"
+            appearance="pill"
+        >
+            {{ paymentStateLabel }}
+        </sw-label>
+
+        <sw-label
+            v-if="isTestMode"
+            variant="warning"
+            size="small"
+            appearance="pill"
+            class="windcave-payment-details__test-badge"
+        >
+            TEST MODE
+        </sw-label>
+    </template>
+    {% endblock %}
+
+    {% block windcave_payment_details_content %}
+    <div class="windcave-payment-details__content">
+
+        {% block windcave_payment_details_transaction %}
+        <div class="windcave-payment-details__section" v-if="transactionDetails.length">
+            <h4 class="windcave-payment-details__section-title">Transaction Information</h4>
+
+            <sw-description-list
+                grid="1fr 2fr"
+                class="windcave-payment-details__list"
+            >
+                <template v-for="detail in transactionDetails" :key="detail.label">
+                    <dt class="windcave-payment-details__label">{{ detail.label }}</dt>
+                    <dd class="windcave-payment-details__value">
+                        <span>{{ detail.value }}</span>
+                        <sw-button
+                            v-if="detail.copyable"
+                            size="x-small"
+                            variant="ghost"
+                            @click="copyToClipboard(detail.fullValue || detail.value)"
+                            class="windcave-payment-details__copy-btn"
+                        >
+                            <sw-icon name="default-documentation-paper-pencil" size="12"></sw-icon>
+                        </sw-button>
+                    </dd>
+                </template>
+            </sw-description-list>
+        </div>
+        {% endblock %}
+
+        {% block windcave_payment_details_card_token %}
+        <div class="windcave-payment-details__section" v-if="hasCardTokenData">
+            <h4 class="windcave-payment-details__section-title">Stored Card</h4>
+
+            <sw-description-list
+                grid="1fr 2fr"
+                class="windcave-payment-details__list"
+            >
+                <template v-for="detail in cardTokenDetails" :key="detail.label">
+                    <dt class="windcave-payment-details__label">{{ detail.label }}</dt>
+                    <dd class="windcave-payment-details__value">
+                        <span>{{ detail.value }}</span>
+                        <sw-button
+                            v-if="detail.copyable"
+                            size="x-small"
+                            variant="ghost"
+                            @click="copyToClipboard(detail.fullValue || detail.value)"
+                            class="windcave-payment-details__copy-btn"
+                        >
+                            <sw-icon name="default-documentation-paper-pencil" size="12"></sw-icon>
+                        </sw-button>
+                    </dd>
+                </template>
+            </sw-description-list>
+        </div>
+        {% endblock %}
+
+        {% block windcave_payment_details_refund %}
+        <div class="windcave-payment-details__section windcave-payment-details__section--refund" v-if="hasRefundData">
+            <h4 class="windcave-payment-details__section-title">Refund Information</h4>
+
+            <sw-description-list
+                grid="1fr 2fr"
+                class="windcave-payment-details__list"
+            >
+                <template v-for="detail in refundDetails" :key="detail.label">
+                    <dt class="windcave-payment-details__label">{{ detail.label }}</dt>
+                    <dd class="windcave-payment-details__value">
+                        <span>{{ detail.value }}</span>
+                        <sw-button
+                            v-if="detail.copyable"
+                            size="x-small"
+                            variant="ghost"
+                            @click="copyToClipboard(detail.fullValue || detail.value)"
+                            class="windcave-payment-details__copy-btn"
+                        >
+                            <sw-icon name="default-documentation-paper-pencil" size="12"></sw-icon>
+                        </sw-button>
+                    </dd>
+                </template>
+            </sw-description-list>
+        </div>
+        {% endblock %}
+
+        {% block windcave_payment_details_empty %}
+        <sw-empty-state
+            v-if="!transactionDetails.length && !hasRefundData && !hasCardTokenData"
+            title="No Windcave data available"
+            :showDescription="false"
+        >
+        </sw-empty-state>
+        {% endblock %}
+
+    </div>
+    {% endblock %}
+</sw-card>
+{% endblock %}

@@ -1,0 +1,72 @@
+.windcave-payment-details {
+    margin-top: 20px;
+
+    &__test-badge {
+        margin-left: 8px;
+    }
+
+    &__content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    &__section {
+        padding: 16px;
+        background: #f9fafb;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+
+        &--refund {
+            background: #fef3c7;
+            border-color: #fcd34d;
+        }
+    }
+
+    &__section-title {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    &__list {
+        margin: 0;
+
+        dt, dd {
+            padding: 6px 0;
+            margin: 0;
+            border-bottom: 1px solid #e5e7eb;
+
+            &:last-of-type {
+                border-bottom: none;
+            }
+        }
+    }
+
+    &__label {
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    &__value {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+        font-size: 13px;
+        color: #111827;
+        word-break: break-all;
+    }
+
+    &__copy-btn {
+        flex-shrink: 0;
+        padding: 2px 6px !important;
+        min-height: auto !important;
+
+        &:hover {
+            background: #e5e7eb;
+        }
+    }
+}

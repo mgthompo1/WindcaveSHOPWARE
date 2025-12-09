@@ -1,0 +1,65 @@
+{% block windcave_api_test %}
+<sw-card
+    class="windcave-api-test"
+    title="API Credentials Test"
+    :isLoading="isLoading"
+>
+    <template #toolbar>
+        <sw-button
+            variant="primary"
+            size="small"
+            :isLoading="isLoading"
+            @click="testCredentials"
+        >
+            <sw-icon name="default-action-refresh" size="16"></sw-icon>
+            Test Credentials
+        </sw-button>
+    </template>
+
+    {% block windcave_api_test_content %}
+    <div class="windcave-api-test__content">
+        <p class="windcave-api-test__description">
+            Test your Windcave API credentials to ensure they are configured correctly.
+            This will make a test request to the Windcave API to validate authentication.
+        </p>
+
+        {% block windcave_api_test_result %}
+        <div v-if="testResult" class="windcave-api-test__result" :class="'windcave-api-test__result--' + testResultVariant">
+            <sw-icon :name="testResultIcon" :color="testResult.success ? '#37d046' : '#de294c'" size="24"></sw-icon>
+
+            <div class="windcave-api-test__result-content">
+                <h4 class="windcave-api-test__result-title">
+                    {{ testResult.success ? 'Connection Successful' : 'Connection Failed' }}
+                </h4>
+                <p class="windcave-api-test__result-message">{{ testResult.message }}</p>
+
+                <div v-if="testResult.details" class="windcave-api-test__result-details">
+                    <dl>
+                        <template v-if="testResult.details.environment">
+                            <dt>Environment:</dt>
+                            <dd>{{ testResult.details.environment }}</dd>
+                        </template>
+                        <template v-if="testResult.details.response_time_ms">
+                            <dt>Response Time:</dt>
+                            <dd>{{ testResult.details.response_time_ms }}ms</dd>
+                        </template>
+                    </dl>
+                </div>
+
+                <p v-if="lastTestTime" class="windcave-api-test__last-test">
+                    Last tested: {{ lastTestTime }}
+                </p>
+            </div>
+        </div>
+        {% endblock %}
+
+        {% block windcave_api_test_placeholder %}
+        <div v-else class="windcave-api-test__placeholder">
+            <sw-icon name="default-badge-info" size="20" color="#758CA3"></sw-icon>
+            <span>Click "Test Credentials" to verify your API configuration</span>
+        </div>
+        {% endblock %}
+    </div>
+    {% endblock %}
+</sw-card>
+{% endblock %}

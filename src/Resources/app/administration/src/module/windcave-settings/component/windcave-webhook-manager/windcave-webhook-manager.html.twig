@@ -1,0 +1,95 @@
+{% block windcave_webhook_manager %}
+<sw-card
+    class="windcave-webhook-manager"
+    title="Webhook Configuration (FPRN)"
+    :isLoading="isLoading"
+>
+    <template #toolbar>
+        <sw-button
+            variant="ghost"
+            size="small"
+            :isLoading="isTesting"
+            @click="testWebhook"
+        >
+            <sw-icon name="default-action-refresh" size="16"></sw-icon>
+            Test Endpoint
+        </sw-button>
+    </template>
+
+    {% block windcave_webhook_manager_content %}
+    <div class="windcave-webhook-manager__content">
+
+        {% block windcave_webhook_manager_url %}
+        <div class="windcave-webhook-manager__url-section">
+            <label class="windcave-webhook-manager__label">Webhook URL (FPRN Endpoint)</label>
+            <div class="windcave-webhook-manager__url-field">
+                <input
+                    type="text"
+                    readonly
+                    :value="webhookUrl"
+                    class="windcave-webhook-manager__url-input"
+                />
+                <sw-button
+                    variant="ghost"
+                    size="small"
+                    @click="copyWebhookUrl"
+                >
+                    <sw-icon name="default-documentation-paper-pencil" size="16"></sw-icon>
+                    Copy
+                </sw-button>
+            </div>
+        </div>
+        {% endblock %}
+
+        {% block windcave_webhook_manager_test_result %}
+        <div v-if="testResult" class="windcave-webhook-manager__test-result" :class="testResult.success ? 'windcave-webhook-manager__test-result--success' : 'windcave-webhook-manager__test-result--error'">
+            <sw-icon
+                :name="testResult.success ? 'default-basic-checkmark-circle' : 'default-badge-error'"
+                :color="testResult.success ? '#37d046' : '#de294c'"
+                size="20"
+            ></sw-icon>
+            <span>{{ testResult.message }}</span>
+            <span v-if="testResult.response_time_ms" class="windcave-webhook-manager__response-time">
+                ({{ testResult.response_time_ms }}ms)
+            </span>
+        </div>
+        {% endblock %}
+
+        {% block windcave_webhook_manager_instructions %}
+        <div class="windcave-webhook-manager__instructions">
+            <h4>Setup Instructions</h4>
+            <p class="windcave-webhook-manager__note">
+                Windcave uses FPRN (Fail Proof Result Notification) for server-to-server payment notifications.
+                Configure this in your Windcave merchant portal.
+            </p>
+
+            <ol class="windcave-webhook-manager__steps">
+                <li v-for="(instruction, key) in instructions" :key="key">
+                    {{ instruction }}
+                </li>
+            </ol>
+
+            <sw-alert variant="info" class="windcave-webhook-manager__info">
+                <strong>Note:</strong> FPRN notifications are sent from Windcave's servers to your webhook URL
+                whenever a payment status changes. This ensures payment status is updated even if the customer
+                closes their browser before returning to your store.
+            </sw-alert>
+        </div>
+        {% endblock %}
+
+        {% block windcave_webhook_manager_events %}
+        <div class="windcave-webhook-manager__events" v-if="webhookData && webhookData.supported_events">
+            <h4>Supported Events</h4>
+            <ul class="windcave-webhook-manager__event-list">
+                <li v-for="event in webhookData.supported_events" :key="event">
+                    <sw-icon name="default-basic-checkmark-line" size="14" color="#37d046"></sw-icon>
+                    {{ event }}
+                </li>
+            </ul>
+        </div>
+        {% endblock %}
+
+    </div>
+    {% endblock %}
+</sw-card>
+{% endblock %}
