@@ -18,6 +18,9 @@ class WindcaveSessionRequestPayload
         public readonly string $cancelledUrl,
         public readonly string $notificationUrl,
         public readonly bool $testMode,
+        public readonly bool $storeCard = false,
+        public readonly ?string $storedCardIndicator = null,
+        public readonly ?string $cardId = null,
         public readonly ?string $customerEmail = null,
         public readonly ?string $customerPhone = null,
         public readonly ?string $customerHomePhone = null,
@@ -45,6 +48,16 @@ class WindcaveSessionRequestPayload
             ],
             'notificationUrl' => $this->notificationUrl,
         ];
+
+        if ($this->storeCard) {
+            $payload['storeCard'] = true;
+        }
+        if ($this->storedCardIndicator) {
+            $payload['storedCardIndicator'] = $this->storedCardIndicator;
+        }
+        if ($this->cardId) {
+            $payload['cardId'] = $this->cardId;
+        }
 
         $customer = [];
         if ($this->customerEmail) {

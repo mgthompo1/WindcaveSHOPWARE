@@ -21,6 +21,10 @@
         <service id="Windcave\Service\WindcaveApiService"/>
         <service id="Windcave\Service\WindcaveConfig"/>
         <service id="Windcave\Service\WindcavePayloadFactory"/>
+        <service id="Windcave\Service\WindcaveTokenService">
+            <argument type="service" id="customer.repository"/>
+            <argument type="service" id="order_transaction.repository"/>
+        </service>
 
         <service id="Windcave\Controller\WindcaveReturnController">
             <tag name="controller.service_arguments"/>

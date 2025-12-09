@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Windcave\Service\WindcaveApiService;
 use Windcave\Service\WindcavePayloadFactory;
+use Windcave\Service\WindcaveTokenService;
 
 class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterface
 {
@@ -26,6 +27,7 @@ class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterfac
         private readonly EntityRepository $orderTransactionRepository,
         private readonly RequestStack $requestStack,
         private readonly UrlGeneratorInterface $router,
+        private readonly WindcaveTokenService $tokenService,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -131,6 +133,14 @@ class WindcaveDropInPaymentHandler implements AsynchronousPaymentHandlerInterfac
                 $transaction->getOrderTransaction()->getId(),
                 'Windcave reported payment failed: ' . $result->getMessage()
             );
+        }
+
+        $cardId = $result->getCardId();
+        $customerId = $salesChannelContext->getCustomer()?->getId();
+        if ($cardId && $customerId) {
+            $this->tokenService->storeForCustomer($customerId, $cardId, $salesChannelContext->getContext());
+        } elseif ($cardId) {
+            $this->tokenService->storeOnTransaction($transaction->getOrderTransaction()->getId(), $cardId, $salesChannelContext->getContext());
         }
     }
 }

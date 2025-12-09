@@ -8,12 +8,14 @@ use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Windcave\Service\WindcaveSessionRequestPayload;
+use Windcave\Service\WindcaveTokenService;
 
 class WindcavePayloadFactory
 {
     public function __construct(
         private readonly WindcaveConfig $config,
-        private readonly UrlGeneratorInterface $router
+        private readonly UrlGeneratorInterface $router,
+        private readonly WindcaveTokenService $tokenService
     ) {
     }
 
@@ -62,6 +64,12 @@ class WindcavePayloadFactory
         $restUser = $this->config->getRestUsername($salesChannelId);
         $restKey = $this->config->getRestApiKey($salesChannelId);
         $testMode = $this->config->isTestMode($salesChannelId);
+        $storeCard = $this->config->isStoreCardEnabled($salesChannelId);
+        $customerId = $context->getCustomer()?->getId();
+        $savedToken = $this->getStoredToken($customerId, $context->getContext());
+        $storedCardIndicator = $savedToken
+            ? $this->config->getStoredCardIndicatorRecurring($salesChannelId)
+            : ($storeCard ? $this->config->getStoredCardIndicatorInitial($salesChannelId) : null);
 
         return new WindcaveSessionRequestPayload(
             username: $restUser,
@@ -80,7 +88,10 @@ class WindcavePayloadFactory
             customerHomePhone: null,
             billingAddress: $this->mapAddress($billing),
             shippingAddress: $this->mapAddress($shipping),
-            threeDS: $this->buildThreeDS($customerEmail, $billing)
+            threeDS: $this->buildThreeDS($customerEmail, $billing),
+            storeCard: $storeCard && !$savedToken,
+            storedCardIndicator: $storedCardIndicator,
+            cardId: $savedToken
         );
     }
 
@@ -123,5 +134,14 @@ class WindcavePayloadFactory
                 'shippingIndicator' => 'digital',
             ],
         ];
+    }
+
+    private function getStoredToken(?string $customerId, \Shopware\Core\Framework\Context $context): ?string
+    {
+        if (!$customerId) {
+            return null;
+        }
+
+        return $this->tokenService->getStoredToken($customerId, $context);
     }
 }

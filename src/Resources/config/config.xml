@@ -8,5 +8,8 @@
         <input-field type="bool" name="WindcavePayment.config.testMode" label="Test mode" defaultValue="true"/>
         <input-field type="text" name="WindcavePayment.config.appleMerchantId" label="Apple Pay merchantId (Windcave)" required="false"/>
         <input-field type="text" name="WindcavePayment.config.googleMerchantId" label="Google Pay merchantId (Windcave/Google)" required="false"/>
+        <input-field type="bool" name="WindcavePayment.config.storeCard" label="Store card token for rebilling" defaultValue="false"/>
+        <input-field type="text" name="WindcavePayment.config.storedCardIndicatorInitial" label="Stored card indicator (initial)" defaultValue="credentialonfileinitial"/>
+        <input-field type="text" name="WindcavePayment.config.storedCardIndicatorRecurring" label="Stored card indicator (recurring)" defaultValue="credentialonfile"/>
     </card>
 </config>

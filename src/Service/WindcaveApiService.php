@@ -9,6 +9,7 @@ use Shopware\Core\Framework\HttpException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Windcave\Service\Struct\WindcaveDropInSession;
 use Windcave\Service\WindcaveSessionRequestPayload;
+use Windcave\Service\WindcaveResult;
 
 class WindcaveApiService
 {
@@ -113,10 +114,25 @@ class WindcaveApiService
 
         $data = $response->toArray(false);
         $state = \strtolower((string) ($data['state'] ?? ''));
+        $cardId = $this->extractCardId($data);
 
         return new WindcaveResult(
             success: \in_array($state, ['approved', 'complete', 'completed'], true),
-            message: (string) ($data['state'] ?? '')
+            message: (string) ($data['state'] ?? ''),
+            cardId: $cardId
         );
+    }
+
+    private function extractCardId(array $data): ?string
+    {
+        if (isset($data['transactions'][0]['card']['id'])) {
+            return (string) $data['transactions'][0]['card']['id'];
+        }
+
+        if (isset($data['card']['id'])) {
+            return (string) $data['card']['id'];
+        }
+
+        return null;
     }
 }

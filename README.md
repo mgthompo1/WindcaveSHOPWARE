@@ -8,6 +8,7 @@ Windcave hosted payment page (PxPay) integration for Shopware 6 using the asynch
 - Drop-in flow: create REST session (`/api/v1/sessions`) → render drop-in JS with returned `links` → redirect to Shopware return URL with session id → verify session state server-side
 - Configurable REST credentials, Apple Pay merchantId, Google Pay merchantId, and test mode per sales channel
 - Sends basic 3DS data (email, billing/shipping address, challenge preference) on session creation
+- Optional tokenization: store card tokens (cardId) on customer for rebilling; reuse tokens via storedCardIndicator on subsequent sessions
 
 ## Installation
 1. Place the plugin folder in your Shopware installation (e.g. `custom/plugins/WindcaveSHOPWARE`).
@@ -29,6 +30,8 @@ In **Settings → System → Plugins → Windcave Shopware Plugin** set per sale
 - `Apple Pay merchantId (Windcave)` (optional)
 - `Google Pay merchantId (Windcave/Google)` (optional)
 - `Test mode` (switches between UAT and live endpoints)
+- `Store card token for rebilling` (enable to save cardId and reuse for credential-on-file payments)
+- `Stored card indicator (initial/recurring)` (adjust if needed)
 
 Assign one or both payment methods to the sales channel.
 

@@ -32,6 +32,21 @@ class WindcaveConfig
         return (string) ($this->systemConfig->get('WindcavePayment.config.googleMerchantId', $salesChannelId) ?? '');
     }
 
+    public function isStoreCardEnabled(?string $salesChannelId): bool
+    {
+        return (bool) ($this->systemConfig->get('WindcavePayment.config.storeCard', $salesChannelId) ?? false);
+    }
+
+    public function getStoredCardIndicatorInitial(?string $salesChannelId): string
+    {
+        return (string) ($this->systemConfig->get('WindcavePayment.config.storedCardIndicatorInitial', $salesChannelId) ?? 'credentialonfileinitial');
+    }
+
+    public function getStoredCardIndicatorRecurring(?string $salesChannelId): string
+    {
+        return (string) ($this->systemConfig->get('WindcavePayment.config.storedCardIndicatorRecurring', $salesChannelId) ?? 'credentialonfile');
+    }
+
     public function isTestMode(?string $salesChannelId): bool
     {
         return (bool) $this->systemConfig->get('WindcavePayment.config.testMode', $salesChannelId);

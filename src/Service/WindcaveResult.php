@@ -8,7 +8,8 @@ class WindcaveResult
 {
     public function __construct(
         private readonly bool $success,
-        private readonly string $message
+        private readonly string $message,
+        private readonly ?string $cardId = null
     ) {
     }
 
@@ -20,5 +21,10 @@ class WindcaveResult
     public function getMessage(): string
     {
         return $this->message;
+    }
+
+    public function getCardId(): ?string
+    {
+        return $this->cardId;
     }
 }
