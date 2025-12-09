@@ -1,20 +1,27 @@
 {% sw_extends '@Storefront/storefront/page/checkout/confirm/index.html.twig' %}
 
-{# Inject Windcave Drop-In scripts in the head #}
+{# Inject Windcave scripts in the head based on payment mode #}
 {% block base_head %}
     {{ parent() }}
 
     {% if page.extensions.windcaveDropIn and page.extensions.windcaveDropIn.links is not empty %}
         {% set windcaveData = page.extensions.windcaveDropIn %}
+        {% set paymentMode = windcaveData.paymentMode|default('dropin') %}
 
-        {# Load Windcave Drop-In JavaScript files - order matters! #}
-        <script src="{{ windcaveData.scriptBase }}/js/lib/drop-in-v1.js"></script>
-        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-dropin-v1.js"></script>
-        <script src="{{ windcaveData.scriptBase }}/js/lib/hosted-fields-v1.js"></script>
-        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-hostedfields-v1.js"></script>
-        {# Apple Pay and Google Pay scripts - always load them, SDK checks availability #}
-        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-applepay-v1.js"></script>
-        <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-googlepay-v1.js"></script>
+        {% if paymentMode == 'hostedfields' %}
+            {# Hosted Fields only needs the hosted fields script #}
+            <script src="{{ windcaveData.scriptBase }}/js/lib/hosted-fields-v1.js"></script>
+            <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-hostedfields-v1.js"></script>
+        {% elseif paymentMode == 'dropin' %}
+            {# Load Windcave Drop-In JavaScript files - order matters! #}
+            <script src="{{ windcaveData.scriptBase }}/js/lib/drop-in-v1.js"></script>
+            <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-dropin-v1.js"></script>
+            <script src="{{ windcaveData.scriptBase }}/js/lib/hosted-fields-v1.js"></script>
+            <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-hostedfields-v1.js"></script>
+            {# Apple Pay and Google Pay scripts - always load them, SDK checks availability #}
+            <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-applepay-v1.js"></script>
+            <script src="{{ windcaveData.scriptBase }}/js/windcavepayments-googlepay-v1.js"></script>
+        {% endif %}
 
         {# Custom CSS from admin configuration #}
         {% if windcaveData.customCss %}
@@ -23,8 +30,70 @@
         </style>
         {% endif %}
 
-        {# Styling for Drop-In container #}
         <style>
+            {% if paymentMode == 'hostedfields' %}
+            /* Hosted Fields Styles - Modern inline card form */
+            .windcave-hf-wrapper {
+                background: #fff;
+                padding: 0;
+                margin-bottom: 1rem;
+            }
+            .windcave-hf-labels {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 6px;
+                font-size: 13px;
+                font-weight: 500;
+                color: #374151;
+            }
+            .windcave-hf-labels .label-card {
+                flex: 1;
+            }
+            .windcave-hf-labels .label-expiry {
+                width: 100px;
+                text-align: center;
+            }
+            .windcave-hf-labels .label-cvv {
+                width: 80px;
+                text-align: center;
+            }
+            .windcave-hf-row {
+                display: flex;
+                gap: 12px;
+                align-items: stretch;
+            }
+            .windcave-hf-field-card {
+                flex: 1;
+                min-width: 0;
+                position: relative;
+            }
+            .windcave-hf-field-expiry {
+                width: 100px;
+            }
+            .windcave-hf-field-cvv {
+                width: 80px;
+            }
+            .windcave-hf-input {
+                height: 44px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                background: #fff;
+                display: flex;
+                align-items: center;
+                overflow: hidden;
+            }
+            .windcave-hf-input iframe {
+                width: 100% !important;
+                height: 100% !important;
+                border: none !important;
+            }
+            .windcave-hf-error {
+                color: #dc2626;
+                font-size: 12px;
+                margin-top: 8px;
+            }
+            {% elseif paymentMode == 'dropin' %}
+            /* Drop-In Styles */
             .windcave-dropin-checkout {
                 margin-top: 1rem;
                 min-height: 200px;
@@ -41,38 +110,279 @@
             .checkout-aside-action {
                 display: none !important;
             }
+            {% endif %}
         </style>
     {% endif %}
 {% endblock %}
 
-{# Extend the payment form block to add Drop-In INSIDE the payment card #}
+{# Extend the payment form block to add payment UI INSIDE the payment card #}
 {% block page_checkout_change_payment_form %}
     {{ parent() }}
 
     {% if page.extensions.windcaveDropIn and page.extensions.windcaveDropIn.links is not empty %}
         {% set windcaveData = page.extensions.windcaveDropIn %}
+        {% set paymentMode = windcaveData.paymentMode|default('dropin') %}
 
-        <style>
-            .windcave-dropin-checkout {
-                margin-top: 1rem;
-                min-height: 200px;
-            }
-            /* Hide only the description paragraph, not the payment method name */
-            .payment-method-description p.mb-0 {
-                display: none !important;
-            }
-        </style>
+        {% if paymentMode == 'hostedfields' %}
+            {# Hosted Fields container - inline card fields #}
+            <div class="windcave-hf-wrapper">
+                <div id="windcave-hosted-fields-form">
+                    <div class="windcave-hf-labels">
+                        <div class="label-card">Card number</div>
+                        <div class="label-expiry">Expiry</div>
+                        <div class="label-cvv">CVC</div>
+                    </div>
+                    <div class="windcave-hf-row">
+                        <div class="windcave-hf-field-card">
+                            <div id="windcave-card-number" class="windcave-hf-input"></div>
+                        </div>
+                        <div class="windcave-hf-field-expiry">
+                            <div id="windcave-expiry-date" class="windcave-hf-input"></div>
+                        </div>
+                        <div class="windcave-hf-field-cvv">
+                            <div id="windcave-cvv" class="windcave-hf-input"></div>
+                        </div>
+                    </div>
+                    <div id="windcave-hf-error" class="windcave-hf-error" style="display: none;"></div>
+                </div>
+                <input type="hidden" id="windcave-payment-completed" name="windcavePaymentCompleted" value="0" form="confirmOrderForm">
+                <input type="hidden" id="windcave-session-id" name="windcaveSessionId" value="{{ windcaveData.sessionId }}" form="confirmOrderForm">
+            </div>
+        {% elseif paymentMode == 'dropin' %}
+            {# Drop-In container - inside the payment card, after payment method radios #}
+            <div id="windcave-dropin-container" class="windcave-dropin-checkout">
+                <p class="text-muted">Loading secure payment form...</p>
+            </div>
 
-        {# Drop-In container - inside the payment card, after payment method radios #}
-        <div id="windcave-dropin-container" class="windcave-dropin-checkout">
-            <p class="text-muted">Loading secure payment form...</p>
-        </div>
+            {# Hidden fields to store payment result for form submission #}
+            <input type="hidden" id="windcave-payment-completed" name="windcavePaymentCompleted" value="0" form="confirmOrderForm">
+            <input type="hidden" id="windcave-session-id" name="windcaveSessionId" value="{{ windcaveData.sessionId }}" form="confirmOrderForm">
+        {% endif %}
+    {% endif %}
+{% endblock %}
 
-        {# Hidden fields to store payment result for form submission #}
-        <input type="hidden" id="windcave-payment-completed" name="windcavePaymentCompleted" value="0" form="confirmOrderForm">
-        <input type="hidden" id="windcave-session-id" name="windcaveSessionId" value="{{ windcaveData.sessionId }}" form="confirmOrderForm">
+{# JavaScript initialization in body script block #}
+{% block base_body_script %}
+    {{ parent() }}
 
-        {# Initialize Drop-In JavaScript #}
+    {% if page.extensions.windcaveDropIn and page.extensions.windcaveDropIn.links is not empty %}
+        {% set windcaveData = page.extensions.windcaveDropIn %}
+        {% set paymentMode = windcaveData.paymentMode|default('dropin') %}
+
+        {% if paymentMode == 'hostedfields' %}
+        <script>
+            (function() {
+                var config = {
+                    sessionId: "{{ windcaveData.sessionId }}",
+                    links: {{ windcaveData.links|json_encode|raw }}
+                };
+
+                console.log('=== Windcave Hosted Fields Config ===');
+                console.log('Session ID:', config.sessionId);
+                console.log('Links:', config.links);
+
+                var instance = null;
+                var paymentCompleted = false;
+
+                // Find the ajaxSubmitCard link for form submission
+                var cardLink = null;
+                for (var i = 0; i < config.links.length; i++) {
+                    if (config.links[i].rel === 'ajaxSubmitCard') {
+                        cardLink = config.links[i].href;
+                        break;
+                    }
+                }
+                console.log('Card submit URL:', cardLink);
+
+                function showError(message) {
+                    var errorDiv = document.getElementById('windcave-hf-error');
+                    if (errorDiv) {
+                        errorDiv.textContent = message;
+                        errorDiv.style.display = 'block';
+                    }
+                }
+
+                function hideError() {
+                    var errorDiv = document.getElementById('windcave-hf-error');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                    }
+                }
+
+                function initHostedFields() {
+                    console.log('Initializing Windcave Hosted Fields...');
+
+                    if (!cardLink) {
+                        showError('Payment configuration error. Please try again.');
+                        return;
+                    }
+
+                    var options = {
+                        sessionId: config.sessionId,
+                        formId: 'windcave-hosted-fields-form',
+                        fields: {
+                            CardNumber: {
+                                container: 'windcave-card-number',
+                                placeholder: '1234 5678 9012 3456',
+                                tabOrder: 1,
+                                cardSchemaImagePlacement: 'right',
+                                supportedCards: ['visa', 'masterCard', 'amex'],
+                                length: {
+                                    maximumValidLength: 19,
+                                    jumpToNextField: true
+                                }
+                            },
+                            ExpirationDate: {
+                                container: 'windcave-expiry-date',
+                                placeholder: 'MM/YY',
+                                tabOrder: 2,
+                                length: {
+                                    jumpToNextField: true
+                                }
+                            },
+                            CVV: {
+                                container: 'windcave-cvv',
+                                placeholder: 'CVC',
+                                tabOrder: 3,
+                                length: {
+                                    jumpToNextField: true
+                                }
+                            }
+                        }
+                    };
+
+                    try {
+                        instance = WindcavePayments.HostedFields.create(
+                            options,
+                            10000,
+                            function() {
+                                console.log('Hosted Fields created successfully!');
+                                // Store the URL for submit
+                                window.windcaveAjaxUrl = cardLink;
+                            },
+                            function(err) {
+                                console.error('Hosted Fields creation failed:', err);
+                                showError('Failed to load payment form. Please refresh the page.');
+                            }
+                        );
+                        window.windcaveHostedFields = instance;
+                    } catch (e) {
+                        console.error('Exception creating Hosted Fields:', e);
+                        showError('Payment form error. Please refresh the page.');
+                    }
+                }
+
+                function waitForWindcave() {
+                    var maxAttempts = 100;
+                    var attempts = 0;
+
+                    function check() {
+                        attempts++;
+                        if (window.WindcavePayments && window.WindcavePayments.HostedFields) {
+                            console.log('WindcavePayments SDK loaded (attempt ' + attempts + ')');
+                            initHostedFields();
+                        } else if (attempts < maxAttempts) {
+                            setTimeout(check, 100);
+                        } else {
+                            console.error('WindcavePayments SDK failed to load');
+                            showError('Payment form unavailable. Please refresh the page.');
+                        }
+                    }
+                    check();
+                }
+
+                // Intercept form submission to submit via Hosted Fields
+                document.addEventListener('DOMContentLoaded', function() {
+                    var orderForm = document.getElementById('confirmOrderForm');
+                    if (orderForm) {
+                        orderForm.addEventListener('submit', function(e) {
+                            var paymentCompletedField = document.getElementById('windcave-payment-completed');
+
+                            // If payment already completed, allow form submission
+                            if (paymentCompletedField && paymentCompletedField.value === '1') {
+                                console.log('Payment completed, allowing order submission');
+                                return true;
+                            }
+
+                            // Check TOS
+                            var tosCheckbox = document.getElementById('tos');
+                            if (tosCheckbox && !tosCheckbox.checked) {
+                                // Let Shopware handle TOS validation
+                                return true;
+                            }
+
+                            // Prevent default and submit via Hosted Fields
+                            e.preventDefault();
+                            hideError();
+
+                            if (!instance) {
+                                showError('Payment form not ready. Please wait and try again.');
+                                return false;
+                            }
+
+                            var submitUrl = window.windcaveAjaxUrl;
+                            if (!submitUrl) {
+                                showError('Payment configuration error.');
+                                return false;
+                            }
+
+                            console.log('Submitting payment via Hosted Fields...');
+
+                            // Disable submit button
+                            var submitBtn = document.getElementById('confirmFormSubmit');
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                submitBtn.textContent = 'Processing...';
+                            }
+
+                            instance.submit(
+                                submitUrl,
+                                30000,
+                                function(result) {
+                                    console.log('Hosted Fields submit result:', result);
+
+                                    if (result && (result.approved === true || result.authorised === true || result.responseText === 'APPROVED')) {
+                                        paymentCompleted = true;
+                                        document.getElementById('windcave-payment-completed').value = '1';
+                                        console.log('Payment approved, submitting order...');
+                                        orderForm.submit();
+                                    } else {
+                                        var errorMsg = 'Payment declined';
+                                        if (result && result.responseText) {
+                                            errorMsg = result.responseText;
+                                        } else if (result && result.message) {
+                                            errorMsg = result.message;
+                                        }
+                                        showError(errorMsg);
+                                        if (submitBtn) {
+                                            submitBtn.disabled = false;
+                                            submitBtn.textContent = 'Submit order';
+                                        }
+                                    }
+                                },
+                                function(err) {
+                                    console.error('Hosted Fields submit error:', err);
+                                    showError('Payment failed. Please check your card details and try again.');
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        submitBtn.textContent = 'Submit order';
+                                    }
+                                }
+                            );
+
+                            return false;
+                        });
+                    }
+                });
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', waitForWindcave);
+                } else {
+                    waitForWindcave();
+                }
+            })();
+        </script>
+        {% elseif paymentMode == 'dropin' %}
         <script>
             (function() {
                 var windcaveConfig = {
@@ -264,5 +574,6 @@
                 }
             })();
         </script>
+        {% endif %}
     {% endif %}
 {% endblock %}

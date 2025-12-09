@@ -59,6 +59,18 @@ class WindcaveConfig
         return (bool) $value;
     }
 
+    /**
+     * Get the payment mode: 'dropin', 'hostedfields', or 'hpp'
+     */
+    public function getPaymentMode(?string $salesChannelId): string
+    {
+        $mode = $this->systemConfig->get(self::CONFIG_PREFIX . 'paymentMode', $salesChannelId);
+        if (!in_array($mode, ['dropin', 'hostedfields', 'hpp'], true)) {
+            return 'dropin';
+        }
+        return $mode;
+    }
+
     // ========================================
     // Drop-in Appearance Settings
     // ========================================

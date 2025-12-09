@@ -18,6 +18,26 @@
             <label>Test mode</label>
             <defaultValue>true</defaultValue>
         </input-field>
+        <input-field type="single-select">
+            <name>paymentMode</name>
+            <label>Payment Mode</label>
+            <helpText>Choose how customers enter payment details: Drop-In (full UI), Hosted Fields (inline card fields), or HPP (redirect)</helpText>
+            <defaultValue>dropin</defaultValue>
+            <options>
+                <option>
+                    <id>dropin</id>
+                    <name>Drop-In (Embedded UI)</name>
+                </option>
+                <option>
+                    <id>hostedfields</id>
+                    <name>Hosted Fields (Inline Card Fields)</name>
+                </option>
+                <option>
+                    <id>hpp</id>
+                    <name>HPP (Redirect to Windcave)</name>
+                </option>
+            </options>
+        </input-field>
         <input-field type="text">
             <name>appleMerchantId</name>
             <label>Apple Pay merchantId (Windcave)</label>

@@ -54,6 +54,14 @@ class CheckoutConfirmPageSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // Check payment mode - HPP mode doesn't need inline session data
+        $paymentMode = $this->config->getPaymentMode($salesChannelId);
+        if ($paymentMode === 'hpp') {
+            // For HPP mode, we don't inject inline payment data
+            // The payment handler will create session and redirect on form submit
+            return;
+        }
+
         // Validate Windcave is configured
         $username = $this->config->getRestUsername($salesChannelId);
         $apiKey = $this->config->getRestApiKey($salesChannelId);
@@ -156,6 +164,7 @@ class CheckoutConfirmPageSubscriber implements EventSubscriberInterface
             'hideSelectPaymentMethodTitle' => $this->config->getHideSelectPaymentMethodTitle($salesChannelId),
             'styles' => $this->config->getDropInStyles($salesChannelId),
             'customCss' => $this->config->getCustomCss($salesChannelId),
+            'paymentMode' => $this->config->getPaymentMode($salesChannelId),
         ];
     }
 
