@@ -1,7 +1,7 @@
 import template from './windcave-payment-details.html.twig';
 import './windcave-payment-details.scss';
 
-const { Component } = Shopware;
+const { Component, Mixin } = Shopware;
 
 /**
  * Windcave Payment Details Component
@@ -11,6 +11,10 @@ const { Component } = Shopware;
  */
 Component.register('windcave-payment-details', {
     template,
+
+    mixins: [
+        Mixin.getByName('notification')
+    ],
 
     props: {
         order: {

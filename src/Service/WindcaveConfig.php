@@ -8,7 +8,7 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class WindcaveConfig
 {
-    private const CONFIG_PREFIX = 'WindcaveSHOPWARE.config.';
+    private const CONFIG_PREFIX = 'WindcavePayment.config.';
 
     public function __construct(private readonly SystemConfigService $systemConfig)
     {

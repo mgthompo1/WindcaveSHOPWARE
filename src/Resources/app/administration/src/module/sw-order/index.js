@@ -5,16 +5,12 @@
 
 import './component/windcave-payment-details';
 
-// Extend the order detail view
-Shopware.Component.override('sw-order-detail-base', {
-    template: `
-        {% block sw_order_detail_base_content %}
-            {% parent %}
+// Import the Twig template for the extension
+import template from './sw-order-detail-details-extension.html.twig';
 
-            <windcave-payment-details
-                v-if="order && order.transactions"
-                :order="order"
-            ></windcave-payment-details>
-        {% endblock %}
-    `
+const { Component } = Shopware;
+
+// Extend the order detail details view (Shopware 6.6+)
+Component.override('sw-order-detail-details', {
+    template
 });

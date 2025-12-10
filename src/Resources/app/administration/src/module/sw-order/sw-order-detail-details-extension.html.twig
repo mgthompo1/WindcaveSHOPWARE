@@ -1,0 +1,8 @@
+{% block sw_order_detail_details %}
+    {% parent %}
+
+    <windcave-payment-details
+        v-if="order && order.transactions"
+        :order="order"
+    ></windcave-payment-details>
+{% endblock %}

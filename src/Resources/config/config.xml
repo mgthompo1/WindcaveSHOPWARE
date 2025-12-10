@@ -38,13 +38,19 @@
                 </option>
             </options>
         </input-field>
+    </card>
+
+    <card>
+        <title>Wallet Payments &amp; Card Storage</title>
         <input-field type="text">
             <name>appleMerchantId</name>
             <label>Apple Pay merchantId (Windcave)</label>
+            <helpText>Your Apple Pay merchant ID registered with Windcave</helpText>
         </input-field>
         <input-field type="text">
             <name>googleMerchantId</name>
             <label>Google Pay merchantId (Windcave/Google)</label>
+            <helpText>Your Google Pay merchant ID</helpText>
         </input-field>
         <input-field type="bool">
             <name>storeCard</name>
@@ -97,96 +103,12 @@
             <helpText>Hide the header text above payment options</helpText>
             <defaultValue>false</defaultValue>
         </input-field>
-    </card>
-
-    <card>
-        <title>Drop-in Button Styling</title>
-        <input-field type="colorpicker">
-            <name>submitButtonBgColor</name>
-            <label>Submit Button Background Color</label>
-            <helpText>Background color for the Submit/Pay button</helpText>
-        </input-field>
-        <input-field type="colorpicker">
-            <name>submitButtonTextColor</name>
-            <label>Submit Button Text Color</label>
-            <helpText>Text color for the Submit/Pay button</helpText>
-        </input-field>
-        <input-field type="colorpicker">
-            <name>submitButtonHoverBgColor</name>
-            <label>Submit Button Hover Background</label>
-            <helpText>Background color when hovering over Submit button</helpText>
-        </input-field>
         <input-field type="text">
-            <name>submitButtonBorderRadius</name>
-            <label>Submit Button Border Radius</label>
-            <helpText>e.g., 4px, 8px, 0</helpText>
-            <placeholder>4px</placeholder>
+            <name>fontFamily</name>
+            <label>Font Family</label>
+            <helpText>e.g., Arial, Helvetica, sans-serif</helpText>
+            <placeholder>inherit</placeholder>
         </input-field>
-    </card>
-
-    <card>
-        <title>Drop-in Container Styling</title>
-        <input-field type="colorpicker">
-            <name>containerBgColor</name>
-            <label>Container Background Color</label>
-            <helpText>Background color for the main drop-in container</helpText>
-        </input-field>
-        <input-field type="colorpicker">
-            <name>containerBorderColor</name>
-            <label>Container Border Color</label>
-            <helpText>Border color for the drop-in container</helpText>
-        </input-field>
-        <input-field type="text">
-            <name>containerBorderRadius</name>
-            <label>Container Border Radius</label>
-            <helpText>e.g., 8px, 12px, 0</helpText>
-            <placeholder>8px</placeholder>
-        </input-field>
-        <input-field type="text">
-            <name>containerPadding</name>
-            <label>Container Padding</label>
-            <helpText>e.g., 16px, 20px 24px</helpText>
-            <placeholder>16px</placeholder>
-        </input-field>
-    </card>
-
-    <card>
-        <title>Drop-in Input Field Styling</title>
-        <input-field type="colorpicker">
-            <name>inputBgColor</name>
-            <label>Input Background Color</label>
-            <helpText>Background color for card input fields</helpText>
-        </input-field>
-        <input-field type="colorpicker">
-            <name>inputBorderColor</name>
-            <label>Input Border Color</label>
-            <helpText>Border color for card input fields</helpText>
-        </input-field>
-        <input-field type="colorpicker">
-            <name>inputFocusBorderColor</name>
-            <label>Input Focus Border Color</label>
-            <helpText>Border color when input is focused</helpText>
-        </input-field>
-        <input-field type="colorpicker">
-            <name>inputValidBorderColor</name>
-            <label>Input Valid Border Color</label>
-            <helpText>Border color when input is valid (e.g., green)</helpText>
-        </input-field>
-        <input-field type="colorpicker">
-            <name>inputInvalidBorderColor</name>
-            <label>Input Invalid Border Color</label>
-            <helpText>Border color when input is invalid (e.g., red)</helpText>
-        </input-field>
-        <input-field type="text">
-            <name>inputBorderRadius</name>
-            <label>Input Border Radius</label>
-            <helpText>e.g., 4px, 6px, 0</helpText>
-            <placeholder>4px</placeholder>
-        </input-field>
-    </card>
-
-    <card>
-        <title>Drop-in Text Styling</title>
         <input-field type="colorpicker">
             <name>primaryTextColor</name>
             <label>Primary Text Color</label>
@@ -195,22 +117,63 @@
         <input-field type="colorpicker">
             <name>secondaryTextColor</name>
             <label>Secondary Text Color</label>
-            <helpText>Secondary text color for hints and descriptions</helpText>
-        </input-field>
-        <input-field type="text">
-            <name>fontFamily</name>
-            <label>Font Family</label>
-            <helpText>e.g., Arial, Helvetica, sans-serif</helpText>
-            <placeholder>inherit</placeholder>
+            <helpText>Secondary text color for hints</helpText>
         </input-field>
     </card>
 
     <card>
-        <title>Advanced: Custom CSS</title>
+        <title>Drop-in Styling (Optional)</title>
+        <input-field type="colorpicker">
+            <name>submitButtonBgColor</name>
+            <label>Button Background</label>
+        </input-field>
+        <input-field type="colorpicker">
+            <name>submitButtonTextColor</name>
+            <label>Button Text</label>
+        </input-field>
+        <input-field type="text">
+            <name>submitButtonBorderRadius</name>
+            <label>Button Border Radius</label>
+            <placeholder>4px</placeholder>
+        </input-field>
+        <input-field type="colorpicker">
+            <name>containerBgColor</name>
+            <label>Container Background</label>
+        </input-field>
+        <input-field type="colorpicker">
+            <name>containerBorderColor</name>
+            <label>Container Border</label>
+        </input-field>
+        <input-field type="text">
+            <name>containerBorderRadius</name>
+            <label>Container Border Radius</label>
+            <placeholder>8px</placeholder>
+        </input-field>
+        <input-field type="colorpicker">
+            <name>inputBgColor</name>
+            <label>Input Background</label>
+        </input-field>
+        <input-field type="colorpicker">
+            <name>inputBorderColor</name>
+            <label>Input Border</label>
+        </input-field>
+        <input-field type="colorpicker">
+            <name>inputFocusBorderColor</name>
+            <label>Input Focus Border</label>
+        </input-field>
+        <input-field type="text">
+            <name>inputBorderRadius</name>
+            <label>Input Border Radius</label>
+            <placeholder>4px</placeholder>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Advanced</title>
         <input-field type="textarea">
             <name>customCss</name>
             <label>Custom CSS</label>
-            <helpText>Add custom CSS rules to style the drop-in. Use Windcave class names like .windcave-dropin-container, .windcave-dropin-card-submit-button, etc.</helpText>
+            <helpText>Add custom CSS rules to style the drop-in. Use Windcave class names like .windcave-dropin-container</helpText>
         </input-field>
     </card>
 </config>
